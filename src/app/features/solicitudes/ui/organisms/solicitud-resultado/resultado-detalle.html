@@ -12,9 +12,7 @@
     }
   </p>
   <h3 class="referencia" translate="no">{{ datos.applicationReference }}</h3>
-  <p class="texto-secundario">
-    {{ datos.status === 'APPROVED' ? 'La solicitud fue aprobada.' : 'La solicitud fue rechazada.' }}
-  </p>
+  <p class="texto-secundario">{{ datos.message }}</p>
 </div>
 
 <div class="monto-destacado">

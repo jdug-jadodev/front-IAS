@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 import { SolicitudesApiService } from '../api/solicitudes-api.service';
-import { SolicitudResultado } from '../models/solicitud.model';
+import { RespuestaEnvioSolicitud } from '../models/solicitud.model';
 import { SolicitudesStore } from './solicitudes.store';
 
 describe('SolicitudesStore', () => {
@@ -17,7 +17,10 @@ describe('SolicitudesStore', () => {
   const resultado = {
     ...datos,
     status: 'APPROVED' as const,
+    message: 'Esta solicitud fue aprobada',
     processedAt: '2026-10-01T10:00:00Z',
+    reasonCode: null,
+    reason: null,
   };
   let store: SolicitudesStore;
   let http: HttpTestingController;
@@ -82,8 +85,22 @@ describe('SolicitudesStore', () => {
 
   it('permite corregir después de un 400', () => {
     store.enviar(datos);
-    http.expectOne(url).flush({}, { status: 400, statusText: 'Bad Request' });
+    http.expectOne(url).flush(
+      {
+        code: 'INVALID_APPLICATION_DATA',
+        message: 'El plazo de la solicitud es obligatorio',
+        traceId: 'trace-400',
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
     expect(store.envio().tipo).toBe('invalid');
+    expect(store.envio()).toMatchObject({
+      error: {
+        code: 'INVALID_APPLICATION_DATA',
+        message: 'El plazo de la solicitud es obligatorio',
+        traceId: 'trace-400',
+      },
+    });
     expect(store.edicionBloqueada()).toBe(false);
     store.enviar({ ...datos, termMonths: 24 });
     const req = http.expectOne(url);
@@ -92,10 +109,36 @@ describe('SolicitudesStore', () => {
     http.expectOne(`${url}?limit=20`).flush([]);
   });
 
+  it.each([
+    [413, 'PAYLOAD_TOO_LARGE', 'El cuerpo de la petición es demasiado grande'],
+    [415, 'UNSUPPORTED_MEDIA_TYPE', 'El tipo de contenido no está soportado'],
+  ])('trata un HTTP %i como rechazo definitivo y editable', (status, code, message) => {
+    store.enviar(datos);
+    http
+      .expectOne(url)
+      .flush({ code, message, traceId: `trace-${status}` }, { status, statusText: 'Client Error' });
+
+    expect(store.envio()).toMatchObject({
+      tipo: 'invalid',
+      error: { status, code, message, traceId: `trace-${status}` },
+    });
+    expect(store.edicionBloqueada()).toBe(false);
+  });
+
   it('exige una referencia diferente tras un conflicto', () => {
     store.enviar(datos);
-    http.expectOne(url).flush({}, { status: 409, statusText: 'Conflict' });
+    http.expectOne(url).flush(
+      {
+        code: 'REFERENCE_CONFLICT',
+        message: 'La referencia ya está asociada a una solicitud con datos diferentes',
+        traceId: 'trace-409',
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
     expect(store.envio().tipo).toBe('conflict');
+    expect(store.envio()).toMatchObject({
+      error: { code: 'REFERENCE_CONFLICT', traceId: 'trace-409' },
+    });
     store.nuevaSolicitud();
     store.enviar(datos);
     http.expectNone(url);
@@ -160,6 +203,28 @@ describe('SolicitudesStore', () => {
     expect(store.recientes().error).not.toBeNull();
   });
 
+  it('inserta un 201 confirmado antes de refrescar y lo conserva si el GET falla', () => {
+    const nueva = { ...resultado, applicationReference: 'REF-NUEVA' };
+    store.enviar({ ...datos, applicationReference: nueva.applicationReference });
+    http.expectOne(url).flush(nueva, { status: 201, statusText: 'Created' });
+
+    expect(store.recientes().datos).toEqual([nueva]);
+    http.expectOne(`${url}?limit=20`).flush({}, { status: 500, statusText: 'Error' });
+    expect(store.recientes().datos).toEqual([nueva]);
+  });
+
+  it('reemplaza un reintento HTTP 200 por referencia sin duplicarlo', () => {
+    store.cargarRecientes();
+    http.expectOne(`${url}?limit=20`).flush([resultado]);
+    store.enviar(datos);
+    const reiterada = { ...resultado, message: 'Esta solicitud ya fue aprobada' };
+    http.expectOne(url).flush(reiterada, { status: 200, statusText: 'OK' });
+
+    expect(store.recientes().datos).toEqual([reiterada]);
+    http.expectOne(`${url}?limit=20`).flush([reiterada]);
+    expect(store.recientes().datos).toHaveLength(1);
+  });
+
   it('cancela las lecturas anteriores al pedir resultados nuevos', () => {
     store.consultarPorReferencia('anterior');
     const anterior = http.expectOne(`${url}/anterior`);
@@ -211,10 +276,10 @@ describe('SolicitudesStore', () => {
   });
 
   it('un error tardío nunca reemplaza un resultado confirmado', () => {
-    const respuesta = new Subject<SolicitudResultado>();
+    const respuesta = new Subject<RespuestaEnvioSolicitud>();
     vi.spyOn(TestBed.inject(SolicitudesApiService), 'enviar').mockReturnValue(respuesta);
     store.enviar(datos);
-    respuesta.next({ ...resultado, status: 'APPROVED' });
+    respuesta.next({ httpStatus: 201, solicitud: resultado });
     http.expectOne(`${url}?limit=20`).flush([]);
     respuesta.error(new Error('Error tardío'));
     expect(store.envio().tipo).toBe('resolved');

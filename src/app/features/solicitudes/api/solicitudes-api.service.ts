@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { map, timeout } from 'rxjs';
-import { SolicitudEntrada } from '../models/solicitud.model';
+import { RespuestaEnvioSolicitud, SolicitudEntrada } from '../models/solicitud.model';
 import {
   parseSolicitud,
   parseSolicitudes,
@@ -22,9 +22,10 @@ export class SolicitudesApiService {
   enviar(datos: SolicitudEntrada) {
     return this.http.post<unknown>(this.url, datos, { observe: 'response' }).pipe(
       timeout(this.espera),
-      map((response) => {
-        if (response.status !== 200 && response.status !== 201) throw new RespuestaIncompatible();
-        return parseSolicitud(response.body);
+      map((response): RespuestaEnvioSolicitud => {
+        const httpStatus = response.status;
+        if (httpStatus !== 200 && httpStatus !== 201) throw new RespuestaIncompatible();
+        return { httpStatus, solicitud: parseSolicitud(response.body) };
       }),
     );
   }

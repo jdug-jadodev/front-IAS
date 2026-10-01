@@ -1,5 +1,13 @@
-import { SolicitudResultado } from '../models/solicitud.model';
+import { CodigoMotivoRechazo, SolicitudResultado } from '../models/solicitud.model';
 import { decimalCanonico } from '../validation/solicitud-form.validators';
+
+const CODIGOS_RECHAZO = new Set<CodigoMotivoRechazo>([
+  'INVALID_AMOUNT',
+  'INVALID_TERM',
+  'CUSTOMER_NOT_FOUND',
+  'CUSTOMER_BLOCKED',
+  'INSUFFICIENT_LIMIT',
+]);
 
 export class RespuestaIncompatible extends Error {
   constructor() {
@@ -9,6 +17,10 @@ export class RespuestaIncompatible extends Error {
 
 function texto(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
+}
+
+function codigoRechazo(value: unknown): value is CodigoMotivoRechazo {
+  return typeof value === 'string' && CODIGOS_RECHAZO.has(value as CodigoMotivoRechazo);
 }
 
 function fechaValida(value: unknown): value is string {
@@ -33,16 +45,9 @@ export function parseSolicitud(value: unknown): SolicitudResultado {
   const data = value as Record<string, unknown>;
   const reference = data['applicationReference'];
   const customer = data['customerId'];
-  const rawAmount = data['amount'];
-  // Compatibilidad provisional con las respuestas numéricas del diseño original.
-  // Importes de precisión arbitraria deben llegar como texto desde el backend.
-  const amount =
-    typeof rawAmount === 'number' &&
-    Number.isFinite(rawAmount) &&
-    Math.abs(rawAmount) <= Number.MAX_SAFE_INTEGER
-      ? String(rawAmount)
-      : rawAmount;
+  const amount = data['amount'];
   const term = data['termMonths'];
+  const message = data['message'];
   const processedAt = data['processedAt'];
   if (
     !texto(reference) ||
@@ -51,6 +56,7 @@ export function parseSolicitud(value: unknown): SolicitudResultado {
     decimalCanonico(amount) === null ||
     typeof term !== 'number' ||
     !Number.isInteger(term) ||
+    !texto(message) ||
     !fechaValida(processedAt)
   )
     throw new RespuestaIncompatible();
@@ -59,10 +65,13 @@ export function parseSolicitud(value: unknown): SolicitudResultado {
     customerId: customer,
     amount,
     termMonths: term,
+    message,
     processedAt,
   };
-  if (data['status'] === 'APPROVED') return { ...base, status: 'APPROVED' };
-  if (data['status'] === 'REJECTED' && texto(data['reasonCode']) && texto(data['reason'])) {
+  if (data['status'] === 'APPROVED' && data['reasonCode'] === null && data['reason'] === null) {
+    return { ...base, status: 'APPROVED', reasonCode: null, reason: null };
+  }
+  if (data['status'] === 'REJECTED' && codigoRechazo(data['reasonCode']) && texto(data['reason'])) {
     return { ...base, status: 'REJECTED', reasonCode: data['reasonCode'], reason: data['reason'] };
   }
   throw new RespuestaIncompatible();

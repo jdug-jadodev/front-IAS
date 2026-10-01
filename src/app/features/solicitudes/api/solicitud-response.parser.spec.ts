@@ -11,7 +11,10 @@ describe('Parser de respuestas', () => {
     amount: '1.00',
     termMonths: 12,
     status: 'APPROVED',
+    message: 'Esta solicitud fue aprobada',
     processedAt: '2026-10-01T10:00:00Z',
+    reasonCode: null,
+    reason: null,
   };
 
   it('conserva los decimales textuales y la fecha enviada por el backend', () => {
@@ -21,7 +24,6 @@ describe('Parser de respuestas', () => {
       processedAt: '2026-10-01T10:00:00.123456-05:00',
     };
     expect(parseSolicitud(response)).toEqual(response);
-    expect(parseSolicitud({ ...base, amount: 1 }).amount).toBe('1');
   });
 
   it.each([
@@ -29,14 +31,23 @@ describe('Parser de respuestas', () => {
     {},
     { ...base, status: 'UNKNOWN' },
     { ...base, status: 'REJECTED' },
+    { ...base, message: '' },
+    { ...base, reasonCode: 'INVALID_AMOUNT', reason: 'No corresponde en una aprobación.' },
     { ...base, processedAt: 'ayer' },
     { ...base, processedAt: '2026-02-30T10:00:00Z' },
     { ...base, processedAt: '2026-10-01T10:00:00' },
+    { ...base, amount: 1 },
     { ...base, amount: Infinity },
     { ...base, amount: 9007199254740992 },
     { ...base, amount: 'NaN' },
     { ...base, termMonths: '12' },
     { ...base, applicationReference: ' ' },
+    {
+      ...base,
+      status: 'REJECTED',
+      reasonCode: 'UNKNOWN_REASON',
+      reason: 'Motivo desconocido.',
+    },
   ])('rechaza una respuesta incompatible: %j', (response) => {
     expect(() => parseSolicitud(response)).toThrow(RespuestaIncompatible);
   });
@@ -47,9 +58,28 @@ describe('Parser de respuestas', () => {
       amount: '-1',
       termMonths: 5,
       status: 'REJECTED',
+      message: 'Esta solicitud fue rechazada',
       reasonCode: 'INVALID_AMOUNT',
       reason: 'Monto inválido.',
     };
+    expect(parseSolicitud(response)).toEqual(response);
+  });
+
+  it.each([
+    'INVALID_AMOUNT',
+    'INVALID_TERM',
+    'CUSTOMER_NOT_FOUND',
+    'CUSTOMER_BLOCKED',
+    'INSUFFICIENT_LIMIT',
+  ] as const)('admite el motivo de rechazo contractual %s', (reasonCode) => {
+    const response = {
+      ...base,
+      status: 'REJECTED',
+      message: 'Esta solicitud fue rechazada',
+      reasonCode,
+      reason: 'Motivo de prueba.',
+    };
+
     expect(parseSolicitud(response)).toEqual(response);
   });
 

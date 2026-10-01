@@ -67,6 +67,7 @@ describe('Formulario de solicitud', () => {
       {
         ...req.request.body,
         status: 'REJECTED',
+        message: 'Esta solicitud fue rechazada',
         reasonCode: 'CUSTOMER_NOT_FOUND',
         reason: 'Cliente inexistente.',
         processedAt: '2026-10-01T10:00:00Z',

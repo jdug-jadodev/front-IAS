@@ -44,7 +44,10 @@ describe('Página de solicitudes', () => {
       amount: '2500000.00',
       termMonths: 24,
       status: 'APPROVED' as const,
+      message: 'Esta solicitud fue aprobada',
       processedAt: '2026-10-01T10:00:00Z',
+      reasonCode: null,
+      reason: null,
     };
     http.expectOne('/api/applications?limit=20').flush([reciente]);
     fixture.detectChanges();
@@ -73,7 +76,10 @@ describe('Página de solicitudes', () => {
         amount: '2500000.00',
         termMonths: 24,
         status: 'APPROVED',
+        message: 'Esta solicitud fue aprobada',
         processedAt: '2026-10-01T10:00:00Z',
+        reasonCode: null,
+        reason: null,
       },
     ]);
     fixture.detectChanges();
@@ -91,6 +97,7 @@ describe('Página de solicitudes', () => {
       {
         ...req.request.body,
         status: 'REJECTED',
+        message: 'Esta solicitud fue rechazada',
         reasonCode: 'CUSTOMER_NOT_FOUND',
         reason: 'Cliente inexistente.',
         processedAt: '2026-10-01T10:00:00Z',
@@ -101,6 +108,9 @@ describe('Página de solicitudes', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     expect(element.querySelector('app-solicitud-resultado')?.textContent).toContain('Rechazada');
+    expect(element.querySelector('app-solicitud-resultado')?.textContent).toContain(
+      'Esta solicitud fue rechazada',
+    );
     const input = element.querySelector<HTMLInputElement>('#consulta')!;
     input.value = 'r/ñ';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -149,7 +159,10 @@ describe('Página de solicitudes', () => {
       amount: '100.00',
       termMonths: 12,
       status: 'APPROVED',
+      message: 'Esta solicitud fue aprobada',
       processedAt: '2026-10-01T10:00:00Z',
+      reasonCode: null,
+      reason: null,
     });
     fixture.detectChanges();
     element.querySelector<HTMLButtonElement>('.encabezado-inspector .boton-texto')!.click();
@@ -178,7 +191,10 @@ describe('Página de solicitudes', () => {
       amount: '100.00',
       termMonths: 12,
       status: 'APPROVED',
+      message: 'Esta solicitud fue aprobada',
       processedAt: '2026-10-01T10:00:00Z',
+      reasonCode: null,
+      reason: null,
     });
     fixture.detectChanges();
     await Promise.resolve();

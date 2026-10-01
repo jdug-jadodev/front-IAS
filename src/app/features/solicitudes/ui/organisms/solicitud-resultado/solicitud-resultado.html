@@ -25,7 +25,7 @@
     }
     @case ('invalid') {
       <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
-      <p class="ayuda">Vuelve al formulario, corrige los campos y envía de nuevo.</p>
+      <p class="ayuda">Revisa el mensaje, ajusta la solicitud y vuelve a enviarla.</p>
     }
     @case ('conflict') {
       <p class="estado estado--conflicto">Referencia en conflicto</p>

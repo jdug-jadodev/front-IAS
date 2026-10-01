@@ -88,7 +88,7 @@ export class SolicitudesStore {
       .subscribe({
         next: (resultado) => {
           if (!this.vigente(id)) return;
-          if (mismosDatos(estado.datos, resultado)) this.confirmar(estado.datos, resultado);
+          if (mismosDatos(estado.datos, resultado)) this.confirmar(estado.datos, resultado, false);
           else
             this.conflicto(estado.datos, {
               message: 'La referencia corresponde a una solicitud con otros datos.',
@@ -187,9 +187,11 @@ export class SolicitudesStore {
       .enviar(datos)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (resultado) => {
+        next: (respuesta) => {
           if (!this.vigente(id)) return;
-          if (mismosDatos(datos, resultado)) this.confirmar(datos, resultado);
+          const resultado = respuesta.solicitud;
+          if (mismosDatos(datos, resultado))
+            this.confirmar(datos, resultado, respuesta.httpStatus === 201);
           else this.errorEnvio(datos, new RespuestaIncompatible());
         },
         error: (error: unknown) => {
@@ -202,9 +204,33 @@ export class SolicitudesStore {
     return id === this.operacion && this.envio().tipo !== 'resolved';
   }
 
-  private confirmar(datos: SolicitudEntrada, resultado: SolicitudResultado): void {
+  private confirmar(
+    datos: SolicitudEntrada,
+    resultado: SolicitudResultado,
+    solicitudNueva: boolean,
+  ): void {
     this._referenciaEnConflicto.set(null);
     this._envio.set({ tipo: 'resolved', datos, resultado });
+    this._recientes.update((estado) => {
+      const indice = estado.datos.findIndex(
+        (solicitud) => solicitud.applicationReference === resultado.applicationReference,
+      );
+      if (!solicitudNueva && indice === -1) return estado;
+      if (solicitudNueva) {
+        return {
+          ...estado,
+          datos: [
+            resultado,
+            ...estado.datos.filter(
+              (solicitud) => solicitud.applicationReference !== resultado.applicationReference,
+            ),
+          ].slice(0, 20),
+        };
+      }
+      const actualizados = [...estado.datos];
+      actualizados[indice] = resultado;
+      return { ...estado, datos: actualizados };
+    });
     this.cargarRecientes();
   }
 
@@ -217,7 +243,8 @@ export class SolicitudesStore {
   private errorEnvio(datos: SolicitudEntrada, error: unknown): void {
     const detalle = mapErrorApi(error);
     if (detalle.status === 409) this.conflicto(datos, detalle);
-    else if (detalle.status === 400) this._envio.set({ tipo: 'invalid', datos, error: detalle });
+    else if (detalle.status && detalle.status >= 400 && detalle.status < 500)
+      this._envio.set({ tipo: 'invalid', datos, error: detalle });
     else this._envio.set({ tipo: 'unconfirmed', datos, error: detalle, recuperacion: null });
   }
 }
