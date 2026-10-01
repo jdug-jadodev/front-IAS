@@ -1,6 +1,6 @@
 # Arquitectura del frontend de créditos
 
-**Estado al 1 de octubre de 2026:** arquitectura implementada en Angular 22.2, con identidad oscura BancoIAS, build de producción y 76 pruebas unitarias aprobadas. La validación end-to-end contra Docker sigue fuera de este repositorio.
+**Estado al 1 de octubre de 2026:** arquitectura implementada en Angular 22.2, con identidad oscura BancoIAS, build de producción y 92 pruebas unitarias aprobadas. La validación end-to-end contra el backend activo sigue pendiente.
 
 **Base:** el enunciado pide registrar solicitudes, mostrar su resultado y consultar las recientes. La concurrencia y las referencias repetidas deben estar protegidas en el core. [^prueba]
 
@@ -192,17 +192,17 @@ Se conservan los contratos acordados. [^backend]
 | `GET /api/applications/{reference}` | Consultar un resultado; codificar el identificador como segmento de URL. |
 | `GET /api/applications?limit=20` | Consultar las últimas solicitudes. |
 
-La entrada contiene `applicationReference`, `customerId`, `amount` y `termMonths`. La respuesta añade `status`, `processedAt` y, en rechazos, `reasonCode` y `reason`.
+La entrada contiene `applicationReference`, `customerId`, `amount` textual y `termMonths`. La respuesta conserva esos campos y añade `status`, `message`, `processedAt`, `reasonCode` y `reason`; los dos últimos son `null` en aprobaciones.
 
-**201 no significa aprobado.** Significa nueva solicitud registrada. HTTP 200 en un POST significa repetición idéntica. La decisión se toma de `status`: `APPROVED` o `REJECTED`.
+**201 no significa aprobado.** Significa nueva solicitud registrada. HTTP 200 en un POST significa repetición idéntica. El servicio conserva ambos estados HTTP y la decisión se toma de `status`: `APPROVED` o `REJECTED`. La UI muestra el `message` contractual para diferenciar un resultado nuevo de uno recuperado.
 
 Mostrar la fecha del backend, nunca inventar la fecha de procesamiento con el reloj del navegador. Mostrar la referencia junto al resultado para identificar qué solicitud se está viendo.
 
-`error-api.mapper.ts` traduce errores HTTP a un objeto pequeño de UI, con mensaje seguro y `traceId` cuando exista. No copia las jerarquías de excepciones Java ni expone SQL o trazas. Un cliente inexistente durante el procesamiento llega como rechazo `CUSTOMER_NOT_FOUND`, no como error de consulta 404.
+`error-api.mapper.ts` conserva `code`, el `message` contractual de errores 4xx y `traceId`, usando `X-Trace-Id` como respaldo. En 5xx mantiene un mensaje genérico para no exponer SQL, excepciones o trazas. Un cliente inexistente durante el procesamiento llega como rechazo `CUSTOMER_NOT_FOUND`, no como error de consulta 404. Los 4xx son fallos definitivos y editables; red, timeout, respuesta incompatible y 5xx permanecen sin confirmar.
 
-`solicitud-response.parser.ts` comprueba los campos esenciales, el estado permitido y la fecha recibida. Los tipos de `HttpClient` no validan el JSON en ejecución. Una respuesta desconocida no se convertirá por defecto en una aprobación. [^http]
+`solicitud-response.parser.ts` exige el DTO completo, monto textual, fecha ISO, estado permitido, nulos de aprobación y los cinco `reasonCode` contractuales. Los tipos de `HttpClient` no validan el JSON en ejecución. Una respuesta desconocida no se convertirá por defecto en una aprobación. [^http]
 
-Cargar recientes al entrar, después de confirmar un resultado y al pulsar actualizar. En la primera carga exitosa, si no existe una consulta activa, seleccionar dinámicamente el primer elemento recibido para abrir su detalle; reutilizar el objeto de la lista y no hacer otro GET. Evitar que una respuesta antigua sobrescriba una consulta posterior. Si falla la actualización, conservar el resultado confirmado y avisar que el listado no pudo actualizarse; **no repetir el POST**. No sustituir un error de listado por un array vacío exitoso.
+Cargar recientes al entrar, después de confirmar un resultado y al pulsar actualizar. Antes del refresco, un 201 se inserta al inicio y un reintento 200 reemplaza por `applicationReference` sin duplicarse; si el GET falla, se conserva ese resultado confirmado. En la primera carga exitosa, si no existe una consulta activa, seleccionar dinámicamente el primer elemento recibido para abrir su detalle; reutilizar el objeto de la lista y no hacer otro GET. Evitar que una respuesta antigua sobrescriba una consulta posterior. Un error de listado no repite el POST ni se convierte en un array vacío exitoso.
 
 ## 9. Protecciones sin construir otro sistema
 
@@ -226,21 +226,21 @@ La cola futura se conectará al backend, nunca directamente al navegador. Angula
 
 ## 11. Qué se prueba
 
-Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingController`. En el último cierre pasan 76 pruebas de 9 archivos. La integración real todavía debe comprobarse con el backend activo y, cuando exista en este repositorio, el entorno Docker. [^pruebas]
+Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingController`. En el último cierre pasan 92 pruebas de 9 archivos. La integración real todavía debe comprobarse con el backend activo y, cuando exista en este repositorio, el entorno Docker. [^pruebas]
 
 | Prueba | Resultado esperado |
 |---|---|
 | Campos y límites | Vacíos y monto cero no envían; plazos 6 y 60 pasan, 5, 61 y fracciones fallan; el primer inválido recibe foco. |
 | Revisión y doble envío | El POST espera confirmación; editar conserva valores y dos confirmaciones rápidas producen un solo POST. |
 | Respuesta perdida | Reintento con referencia y cuerpo originales; no aparece un rechazo inventado. |
-| Decisión y errores | 201 con `REJECTED` se muestra como rechazo; 200, 400, 404, 409 y 5xx siguen sus flujos. |
+| Decisión y errores | 201 con `REJECTED` se muestra como rechazo; 200 conserva el reintento; 400, 404, 409, 413, 415 y 5xx siguen sus flujos. |
 | Estados compartidos | Los organismos usan el mismo store; errores de consultas no alteran el envío. |
 | HTTP y respuesta inválida | Rutas, cuerpos, códigos y parser correctos; respuesta desconocida nunca se muestra como aprobada. |
-| Recientes | La primera carga selecciona el primer registro real sin un GET adicional; una actualización fallida no repite el POST ni borra un resultado confirmado. |
+| Recientes | La primera carga selecciona el primer registro real sin otro GET; el upsert por referencia no duplica y un refresco fallido no borra un resultado confirmado. |
 
 La concurrencia del core debe verificarse además con peticiones simultáneas directamente al backend y PostgreSQL real. No añadiremos un botón de “enviar muchas veces” ni quitaremos las protecciones del formulario para demostrarla. [^prueba]
 
-**Pendiente fuera del frontend:** confirmar escala y respuestas monetarias con ejemplos reales, revalidar un POST end-to-end y añadir Docker/Nginx si se incorpora despliegue a este repositorio. Login, estado persistente, colas y funcionalidades adicionales no forman parte de esta etapa.
+**Pendiente fuera del frontend:** iniciar el backend y validar en vivo POST 201, reintento 200, conflicto 409, validación 400, consulta 404 y la coincidencia entre `traceId` y `X-Trace-Id`. Añadir Docker/Nginx solo si se incorpora despliegue a este repositorio. Login, estado persistente, colas y funcionalidades adicionales no forman parte de esta etapa.
 
 ---
 

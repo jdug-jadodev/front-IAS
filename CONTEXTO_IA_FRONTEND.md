@@ -1,6 +1,6 @@
 # Contexto para continuar el frontend de créditos
 
-**Estado al 1 de octubre de 2026:** implementación funcional en Angular 22.2, con interfaz oscura BancoIAS, 76 pruebas unitarias aprobadas y build de producción. Este archivo resume las decisiones que una IA o una persona debe conservar al modificar el proyecto.
+**Estado al 1 de octubre de 2026:** implementación funcional en Angular 22.2, con interfaz oscura BancoIAS, 92 pruebas unitarias aprobadas y build de producción. Este archivo resume las decisiones que una IA o una persona debe conservar al modificar el proyecto.
 
 ## Reglas que no deben romperse
 
@@ -35,7 +35,7 @@ Acciones: `enviar`, `reintentarEnvio`, `consultarEnvioPendiente`, `cargarRecient
 
 ## Validación
 
-Referencia y cliente obligatorios y no blancos. Monto numérico, finito y mayor que cero. Plazo entero entre 6 y 60. Validadores explícitos en TypeScript; no `ngModel`.
+Referencia y cliente obligatorios y no blancos. Monto decimal textual mayor que cero, sin separadores de miles. Plazo entero entre 6 y 60. Validadores explícitos en TypeScript; no `ngModel`.
 
 No imponer patrones a identificadores ni cambiarlos silenciosamente. No verificar cupo, existencia/habilitación del cliente o unicidad para bloquear solicitudes. Backend decide y conserva rechazos; validaciones del navegador no sustituyen sus reglas.
 
@@ -61,13 +61,13 @@ Estado en memoria, sin localStorage. Recargar pierde borrador; consultar por ref
 
 `POST /api/applications`; `GET /api/applications/{reference}`; `GET /api/applications?limit=20`. Codificar referencia como segmento URL.
 
-Entrada: `applicationReference`, `customerId`, `amount`, `termMonths`. Respuesta: esos datos, `status`, `processedAt`, y `reasonCode`/`reason` para rechazo.
+Entrada: `applicationReference`, `customerId`, `amount` como texto decimal y `termMonths`. Respuesta: esos datos, `status`, `message`, `processedAt`, `reasonCode` y `reason`; las aprobaciones traen los dos últimos en `null`.
 
-201: registro nuevo; 200 en POST: repetición idéntica. Ambos pueden contener `APPROVED` o `REJECTED`. 400: datos no procesados; 409: referencia en conflicto; 404: consulta sin resultado. Cliente inexistente al procesar: rechazo `CUSTOMER_NOT_FOUND`, no 404.
+201: registro nuevo; 200 en POST: repetición idéntica. El servicio conserva el status HTTP y el DTO completo; ambos pueden contener `APPROVED` o `REJECTED`. Los 4xx son definitivos y editables, salvo 409 que entra en conflicto. Red, timeout, respuesta incompatible y 5xx quedan sin confirmar. Cliente inexistente al procesar: rechazo `CUSTOMER_NOT_FOUND`, no 404.
 
-Parser pequeño para campos esenciales, estado y fecha. Tipos TS no validan JSON. Mapper de errores con mensaje seguro y `traceId`, sin excepciones Java ni trazas técnicas.
+Parser estricto para monto textual, mensaje, estado, fecha, nulos y motivos permitidos. Tipos TS no validan JSON. El mapper conserva `code`, el mensaje contractual 4xx y `traceId` —con respaldo en `X-Trace-Id`—, pero no expone mensajes internos de 5xx.
 
-Actualizar recientes al entrar, confirmar y actualizar manualmente. Tras la primera carga exitosa, si no hay una consulta activa, la página selecciona el primer registro real con `seleccionarConsulta`; reutiliza el resultado del listado, sin otro GET y sin una referencia fija. Error del listado no borra resultado, no repite POST ni se convierte en lista vacía exitosa.
+Actualizar recientes al entrar, confirmar y actualizar manualmente. Un 201 se inserta localmente antes del GET; un 200 reemplaza por referencia sin duplicar. Tras la primera carga exitosa, si no hay una consulta activa, la página selecciona el primer registro real con `seleccionarConsulta`, sin otro GET ni referencia fija. Error del listado no borra el upsert confirmado, no repite POST ni se convierte en lista vacía exitosa.
 
 ## Protección, local y pruebas
 

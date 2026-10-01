@@ -11,7 +11,9 @@ La interfaz aplica la identidad visual oscura de IAS Software y consume el backe
 - Monto decimal conservado como `string`, sin convertirlo a punto flotante.
 - Estados de envío separados: en curso, resuelto, inválido, conflicto y sin confirmar.
 - Recuperación de respuestas inciertas mediante consulta o reintento del cuerpo exacto.
+- Mensajes, motivos y trazabilidad tomados del contrato real del backend.
 - Consulta por referencia y listado de las últimas 20 solicitudes.
+- Actualización local por referencia antes del refresco, sin duplicar reintentos.
 - Selección inicial del primer registro real recibido, sin una consulta GET adicional.
 - Borrador conservado al alternar entre alta y consulta durante la sesión.
 - Presentación adaptable maestro–detalle, navegación por teclado y movimiento reducido.
@@ -39,13 +41,13 @@ npm run build
 npm test -- --watch=false
 ```
 
-Las 76 pruebas aprobadas cubren validadores, contrato HTTP, parser defensivo, store, doble envío, revisión previa, recuperación, selección inicial, foco y preservación del borrador.
+Las 92 pruebas aprobadas cubren validadores, DTO completo, estados HTTP 200/201, errores contractuales, parser defensivo, store, doble envío, recuperación, upsert, foco y preservación del borrador.
 
 ## Documentación
 
 - [Arquitectura del frontend](ARQUITECTURA_FRONTEND.md)
 - [Contexto para continuar con IA](CONTEXTO_IA_FRONTEND.md)
-- [Contrato de integración](CONTRATO_API.md)
+- [Contrato de la API para el frontend](API_FRONTEND.md)
 - [Uso de IA y referencias de diseño](USO_IA.md)
 
 ## Límites conocidos

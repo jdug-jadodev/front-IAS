@@ -69,7 +69,7 @@ No se copiaron mocks, datos de ejemplo, identificadores, montos, decisiones, scr
 
 En el cierre funcional previo a esta documentación:
 
-- 9 archivos de pruebas y 76 de 76 pruebas aprobaron;
+- 9 archivos de pruebas y 92 de 92 pruebas aprobaron;
 - el build de producción aprobó;
 - el proxy llegó a mostrar nueve solicitudes reales;
 - la revisión final del backend falló por conexión rechazada en `localhost:8080`, por lo que el POST end-to-end quedó pendiente de repetir;
