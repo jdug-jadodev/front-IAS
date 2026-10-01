@@ -104,16 +104,35 @@ describe('Página de solicitudes', () => {
       processedAt: '2026-10-01T10:00:00Z',
     });
     fixture.detectChanges();
-    element
-      .querySelector<HTMLButtonElement>('.encabezado-inspector .boton-texto')!
-      .click();
+    element.querySelector<HTMLButtonElement>('.encabezado-inspector .boton-texto')!.click();
     fixture.detectChanges();
 
     expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('BORRADOR-1');
     expect(element.querySelector<HTMLInputElement>('#cliente')!.value).toBe('CLI-BORRADOR');
-    expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe(
-      '9007199254740993.0001',
-    );
+    expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe('9007199254740993.0001');
     expect(element.querySelector<HTMLInputElement>('#plazo')!.value).toBe('24');
+  });
+
+  it('lleva el foco al detalle después de consultar una referencia', async () => {
+    http.expectOne('/api/applications?limit=20').flush([]);
+    const element = fixture.nativeElement as HTMLElement;
+    const input = element.querySelector<HTMLInputElement>('#consulta')!;
+    input.value = 'REF-FOCO';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    element
+      .querySelector('app-consulta-referencia form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    http.expectOne('/api/applications/REF-FOCO').flush({
+      applicationReference: 'REF-FOCO',
+      customerId: 'CLI-1',
+      amount: '100.00',
+      termMonths: 12,
+      status: 'APPROVED',
+      processedAt: '2026-10-01T10:00:00Z',
+    });
+    fixture.detectChanges();
+    await Promise.resolve();
+
+    expect(document.activeElement).toBe(element.querySelector('#titulo-inspector'));
   });
 });

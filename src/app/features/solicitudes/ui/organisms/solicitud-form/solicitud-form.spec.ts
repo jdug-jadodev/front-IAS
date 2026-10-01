@@ -37,7 +37,7 @@ describe('Formulario de solicitud', () => {
     http.expectNone('/api/applications');
   });
 
-  it('envía una sola vez el texto exacto y restablece el formulario solo por acción explícita', () => {
+  it('revisa y envía una sola vez el texto exacto antes de bloquear el formulario', () => {
     escribir('referencia', ' Ref-ñ ');
     escribir('cliente', 'c');
     escribir('monto', '9007199254740993.0001');
@@ -46,6 +46,14 @@ describe('Formulario de solicitud', () => {
     element
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    fixture.detectChanges();
+    http.expectNone('/api/applications');
+    expect(element.querySelector('.revision-envio')?.textContent).toContain(
+      '$9.007.199.254.740.993,0001 COP',
+    );
+    const confirmar = element.querySelector<HTMLButtonElement>('.boton-primario')!;
+    confirmar.click();
+    confirmar.click();
     fixture.detectChanges();
     const req = http.expectOne('/api/applications');
     expect(req.request.body).toEqual({
@@ -72,5 +80,37 @@ describe('Formulario de solicitud', () => {
     fixture.detectChanges();
     expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe('');
     expect(element.querySelector<HTMLInputElement>('#monto')!.disabled).toBe(false);
+  });
+
+  it('permite editar la revisión sin perder los datos', async () => {
+    escribir('referencia', 'REV-EDITAR');
+    escribir('cliente', 'CLI-7');
+    escribir('monto', '1500.25');
+    escribir('plazo', '18');
+    element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector('#referencia')).toBeNull();
+    element.querySelectorAll<HTMLButtonElement>('.revision-envio button')[1].click();
+    fixture.detectChanges();
+    await Promise.resolve();
+
+    expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('REV-EDITAR');
+    expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe('1500.25');
+    expect(document.activeElement).toBe(element.querySelector('#referencia'));
+    http.expectNone('/api/applications');
+  });
+
+  it('protege un borrador modificado antes de descartarlo', () => {
+    escribir('referencia', 'BORRADOR');
+    element.querySelectorAll<HTMLButtonElement>('.acciones button')[1].click();
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('BORRADOR');
+    expect(element.querySelector('.confirmacion-descarte')).not.toBeNull();
+    element.querySelector<HTMLButtonElement>('.boton-peligro')!.click();
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('');
   });
 });

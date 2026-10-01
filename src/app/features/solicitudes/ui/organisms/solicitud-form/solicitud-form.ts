@@ -10,7 +10,9 @@ import {
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Mensaje } from '../../../../../shared/ui/atoms/mensaje';
 import { Campo } from '../../../../../shared/ui/molecules/campo';
+import { SolicitudEntrada } from '../../../models/solicitud.model';
 import { SolicitudesStore } from '../../../state/solicitudes.store';
+import { MontoCopPipe } from '../../pipes/monto-cop.pipe';
 import {
   montoPositivo,
   noBlancos,
@@ -19,7 +21,7 @@ import {
 
 @Component({
   selector: 'app-solicitud-form',
-  imports: [ReactiveFormsModule, Campo, Mensaje],
+  imports: [ReactiveFormsModule, Campo, Mensaje, MontoCopPipe],
   templateUrl: './solicitud-form.html',
   styleUrl: './solicitud-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +30,8 @@ export class SolicitudForm {
   protected readonly store = inject(SolicitudesStore);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly intentado = signal(false);
+  protected readonly revisionPendiente = signal<SolicitudEntrada | null>(null);
+  protected readonly confirmacionDescarte = signal(false);
   protected readonly form = new FormGroup({
     applicationReference: new FormControl('', { nonNullable: true, validators: [noBlancos] }),
     customerId: new FormControl('', { nonNullable: true, validators: [noBlancos] }),
@@ -49,6 +53,8 @@ export class SolicitudForm {
       untracked(() => {
         this.form.reset();
         this.intentado.set(false);
+        this.revisionPendiente.set(null);
+        this.confirmacionDescarte.set(false);
       });
     });
   }
@@ -67,7 +73,46 @@ export class SolicitudForm {
     }
     const datos = this.form.getRawValue();
     if (datos.termMonths === null) return;
-    this.store.enviar({ ...datos, termMonths: datos.termMonths });
+    this.confirmacionDescarte.set(false);
+    this.revisionPendiente.set(
+      Object.freeze({
+        ...datos,
+        termMonths: datos.termMonths,
+      }),
+    );
+  }
+
+  protected confirmarEnvio(): void {
+    const datos = this.revisionPendiente();
+    if (!datos || this.store.edicionBloqueada()) return;
+    this.revisionPendiente.set(null);
+    this.store.enviar(datos);
+  }
+
+  protected editarSolicitud(): void {
+    this.revisionPendiente.set(null);
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector<HTMLInputElement>('#referencia')?.focus(),
+    );
+  }
+
+  protected solicitarDescarte(): void {
+    if (this.form.pristine) {
+      this.store.nuevaSolicitud();
+      return;
+    }
+    this.confirmacionDescarte.set(true);
+  }
+
+  protected descartarBorrador(): void {
+    this.store.nuevaSolicitud();
+  }
+
+  protected conservarBorrador(): void {
+    this.confirmacionDescarte.set(false);
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector<HTMLInputElement>('#referencia')?.focus(),
+    );
   }
 
   protected error(campo: keyof typeof this.form.controls): string {

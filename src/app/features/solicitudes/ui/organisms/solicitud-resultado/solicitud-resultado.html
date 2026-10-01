@@ -10,7 +10,7 @@
         Referencia: <strong>{{ estado.datos.applicationReference }}</strong>
       </p>
       <p class="ayuda">
-        Conservamos una copia exacta de los datos mientras esperamos la respuesta del backend.
+        Conservamos una copia exacta de los datos mientras esperamos la respuesta.
       </p>
     }
     @case ('resolved') {
@@ -33,9 +33,7 @@
       <p class="referencia-operacion" translate="no">
         Referencia: <strong>{{ estado.datos.applicationReference }}</strong>
       </p>
-      <p class="ayuda">
-        Consulta el registro original o inicia una solicitud con otra referencia.
-      </p>
+      <p class="ayuda">Consulta el registro original o inicia una solicitud con otra referencia.</p>
       <div class="acciones">
         <button
           type="button"
@@ -55,9 +53,18 @@
         envío para confirmar el resultado.
       </p>
       <dl class="resumen-pendiente">
-        <div><dt>Cliente</dt><dd translate="no">{{ estado.datos.customerId }}</dd></div>
-        <div><dt>Monto</dt><dd>{{ estado.datos.amount }} COP</dd></div>
-        <div><dt>Plazo</dt><dd>{{ estado.datos.termMonths }} meses</dd></div>
+        <div>
+          <dt>Cliente</dt>
+          <dd translate="no">{{ estado.datos.customerId }}</dd>
+        </div>
+        <div>
+          <dt>Monto</dt>
+          <dd>{{ estado.datos.amount }} COP</dd>
+        </div>
+        <div>
+          <dt>Plazo</dt>
+          <dd>{{ estado.datos.termMonths }} meses</dd>
+        </div>
       </dl>
       <app-mensaje
         tono="info"

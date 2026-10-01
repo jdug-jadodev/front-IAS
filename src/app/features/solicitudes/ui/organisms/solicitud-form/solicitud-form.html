@@ -17,109 +17,162 @@
     autocomplete="off"
     [attr.aria-busy]="store.envio().tipo === 'submitting'"
   >
-    <div class="cuadricula-campos">
-      <app-campo
-        class="campo-ancho"
-        controlId="referencia"
-        etiqueta="Referencia de la solicitud"
-        ayuda="Identifica esta operación y permite recuperar su resultado."
-        [error]="error('applicationReference')"
-      >
-        <input
-          id="referencia"
-          name="applicationReference"
-          type="text"
-          formControlName="applicationReference"
-          placeholder="Ej. REF-004"
-          autocomplete="off"
-          spellcheck="false"
-          required
-          aria-describedby="referencia-ayuda referencia-error"
-          [attr.aria-invalid]="!!error('applicationReference')"
-        />
-      </app-campo>
-      <app-campo
-        class="campo-ancho"
-        controlId="cliente"
-        etiqueta="ID del cliente"
-        ayuda="Ingresa el identificador tal como está registrado."
-        [error]="error('customerId')"
-      >
-        <input
-          id="cliente"
-          name="customerId"
-          type="text"
-          formControlName="customerId"
-          placeholder="Ej. CLI-1001"
-          autocomplete="off"
-          spellcheck="false"
-          required
-          aria-describedby="cliente-ayuda cliente-error"
-          [attr.aria-invalid]="!!error('customerId')"
-        />
-      </app-campo>
-      <app-campo
-        controlId="monto"
-        etiqueta="Monto en COP"
-        ayuda="Usa punto decimal y ningún separador de miles. Ejemplo: 1000000.00."
-        [error]="error('amount')"
-      >
-        <input
-          id="monto"
-          name="amount"
-          type="text"
-          inputmode="decimal"
-          formControlName="amount"
-          placeholder="Ej. 1000000.00"
-          autocomplete="off"
-          spellcheck="false"
-          required
-          aria-describedby="monto-ayuda monto-error"
-          [attr.aria-invalid]="!!error('amount')"
-        />
-      </app-campo>
-      <app-campo
-        controlId="plazo"
-        etiqueta="Plazo en meses"
-        ayuda="Entre 6 y 60 meses, sin fracciones."
-        [error]="error('termMonths')"
-      >
-        <input
-          id="plazo"
-          name="termMonths"
-          type="number"
-          inputmode="numeric"
-          min="6"
-          max="60"
-          step="1"
-          formControlName="termMonths"
-          placeholder="Ej. 24"
-          autocomplete="off"
-          required
-          aria-describedby="plazo-ayuda plazo-error"
-          [attr.aria-invalid]="!!error('termMonths')"
-        />
-      </app-campo>
-    </div>
-    @if (store.referenciaEnConflicto()) {
-      <p class="ayuda">
-        La referencia {{ store.referenciaEnConflicto() }} ya está asociada a otros datos. Usa otra
-        para una nueva solicitud.
-      </p>
+    @if (revisionPendiente(); as revision) {
+      <section class="revision-envio" aria-labelledby="titulo-revision">
+        <div class="encabezado-revision">
+          <span class="paso">Paso 2 de 2</span>
+          <h3 id="titulo-revision">Revisa antes de enviar</h3>
+          <p class="texto-secundario">
+            Confirma que estos datos corresponden a la operación que deseas registrar.
+          </p>
+        </div>
+        <dl class="resumen-revision">
+          <div>
+            <dt>Referencia</dt>
+            <dd class="dato-exacto">{{ revision.applicationReference }}</dd>
+          </div>
+          <div>
+            <dt>Cliente</dt>
+            <dd class="dato-exacto">{{ revision.customerId }}</dd>
+          </div>
+          <div>
+            <dt>Monto</dt>
+            <dd class="numero-tabular">{{ revision.amount | montoCop }} COP</dd>
+          </div>
+          <div>
+            <dt>Plazo</dt>
+            <dd>{{ revision.termMonths }} meses</dd>
+          </div>
+        </dl>
+        <div class="acciones">
+          <button
+            type="button"
+            class="boton-primario"
+            [disabled]="store.edicionBloqueada()"
+            (click)="confirmarEnvio()"
+          >
+            Confirmar y enviar
+          </button>
+          <button type="button" (click)="editarSolicitud()">Editar datos</button>
+        </div>
+      </section>
+    } @else {
+      <div class="cuadricula-campos">
+        <app-campo
+          class="campo-ancho"
+          controlId="referencia"
+          etiqueta="Referencia de la solicitud"
+          ayuda="Identifica esta operación y permite recuperar su resultado."
+          [error]="error('applicationReference')"
+        >
+          <input
+            id="referencia"
+            name="applicationReference"
+            type="text"
+            formControlName="applicationReference"
+            placeholder="Ej. REF-004"
+            autocomplete="off"
+            spellcheck="false"
+            required
+            aria-describedby="referencia-ayuda referencia-error"
+            [attr.aria-invalid]="!!error('applicationReference')"
+          />
+        </app-campo>
+        <app-campo
+          class="campo-ancho"
+          controlId="cliente"
+          etiqueta="ID del cliente"
+          ayuda="Ingresa el identificador tal como está registrado."
+          [error]="error('customerId')"
+        >
+          <input
+            id="cliente"
+            name="customerId"
+            type="text"
+            formControlName="customerId"
+            placeholder="Ej. CLI-1001"
+            autocomplete="off"
+            spellcheck="false"
+            required
+            aria-describedby="cliente-ayuda cliente-error"
+            [attr.aria-invalid]="!!error('customerId')"
+          />
+        </app-campo>
+        <app-campo
+          controlId="monto"
+          etiqueta="Monto en COP"
+          ayuda="Usa punto decimal y ningún separador de miles. Ejemplo: 1000000.00."
+          [error]="error('amount')"
+        >
+          <input
+            id="monto"
+            name="amount"
+            type="text"
+            inputmode="decimal"
+            formControlName="amount"
+            placeholder="Ej. 1000000.00"
+            autocomplete="off"
+            spellcheck="false"
+            required
+            aria-describedby="monto-ayuda monto-error"
+            [attr.aria-invalid]="!!error('amount')"
+          />
+        </app-campo>
+        <app-campo
+          controlId="plazo"
+          etiqueta="Plazo en meses"
+          ayuda="Entre 6 y 60 meses, sin fracciones."
+          [error]="error('termMonths')"
+        >
+          <input
+            id="plazo"
+            name="termMonths"
+            type="number"
+            inputmode="numeric"
+            min="6"
+            max="60"
+            step="1"
+            formControlName="termMonths"
+            placeholder="Ej. 24"
+            autocomplete="off"
+            required
+            aria-describedby="plazo-ayuda plazo-error"
+            [attr.aria-invalid]="!!error('termMonths')"
+          />
+        </app-campo>
+      </div>
+      @if (store.referenciaEnConflicto()) {
+        <p class="ayuda">
+          La referencia {{ store.referenciaEnConflicto() }} ya está asociada a otros datos. Usa otra
+          para una nueva solicitud.
+        </p>
+      }
+      <div class="acciones">
+        <button type="submit" class="boton-primario" [disabled]="store.edicionBloqueada()">
+          Revisar solicitud
+        </button>
+        <button
+          type="button"
+          class="boton-texto"
+          (click)="solicitarDescarte()"
+          [disabled]="store.edicionBloqueada()"
+        >
+          Descartar datos
+        </button>
+      </div>
+      @if (confirmacionDescarte()) {
+        <div class="confirmacion-descarte" role="group" aria-labelledby="titulo-descarte">
+          <p id="titulo-descarte"><strong>¿Descartar el borrador?</strong></p>
+          <p class="ayuda">Los datos escritos no se podrán recuperar.</p>
+          <div class="acciones acciones-compactas">
+            <button type="button" class="boton-peligro" (click)="descartarBorrador()">
+              Sí, descartar
+            </button>
+            <button type="button" (click)="conservarBorrador()">Conservar borrador</button>
+          </div>
+        </div>
+      }
     }
-    <div class="acciones">
-      <button type="submit" class="boton-primario" [disabled]="store.edicionBloqueada()">
-        {{ store.envio().tipo === 'submitting' ? 'Enviando…' : 'Enviar solicitud' }}
-      </button>
-      <button
-        type="button"
-        class="boton-texto"
-        (click)="store.nuevaSolicitud()"
-        [disabled]="store.edicionBloqueada()"
-      >
-        Limpiar borrador
-      </button>
-    </div>
     @if (store.edicionBloqueada()) {
       <p class="ayuda">
         Los datos están bloqueados para conservar la solicitud enviada. Revisa el panel de

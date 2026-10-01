@@ -23,6 +23,87 @@
   flex: 1 1 12rem;
 }
 
+.revision-envio {
+  margin-top: var(--space-5);
+}
+
+.encabezado-revision {
+  border-left: 0.25rem solid var(--color-brand-yellow);
+  padding-left: var(--space-4);
+}
+
+.encabezado-revision .texto-secundario {
+  margin-top: var(--space-2);
+}
+
+.paso {
+  color: var(--color-link);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.resumen-revision {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: var(--space-5) 0 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-muted);
+}
+
+.resumen-revision div {
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+}
+
+.resumen-revision div:nth-child(even) {
+  border-left: 1px solid var(--color-border);
+}
+
+.resumen-revision div:nth-child(n + 3) {
+  border-top: 1px solid var(--color-border);
+}
+
+.resumen-revision dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.resumen-revision dd {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-strong);
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.dato-exacto {
+  white-space: pre-wrap;
+}
+
+.confirmacion-descarte {
+  border: 1px solid #e3c269;
+  border-radius: var(--radius-control);
+  padding: var(--space-4);
+  background: var(--color-warning-surface);
+}
+
+.confirmacion-descarte .ayuda {
+  margin-top: var(--space-1);
+  color: var(--color-warning);
+}
+
+.acciones-compactas {
+  margin: var(--space-3) 0 0;
+}
+
+.boton-peligro {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
 @media (max-width: 600px) {
   .cuadricula-campos {
     grid-template-columns: minmax(0, 1fr);
@@ -30,5 +111,17 @@
 
   .campo-ancho {
     grid-column: auto;
+  }
+
+  .resumen-revision {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resumen-revision div:nth-child(even) {
+    border-left: 0;
+  }
+
+  .resumen-revision div:nth-child(n + 2) {
+    border-top: 1px solid var(--color-border);
   }
 }

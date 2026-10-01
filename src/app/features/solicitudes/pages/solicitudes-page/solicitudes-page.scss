@@ -123,6 +123,10 @@
   border-bottom: 1px solid var(--color-border);
 }
 
+#titulo-inspector {
+  scroll-margin-top: var(--space-3);
+}
+
 .contenido-inspector {
   min-height: 28rem;
   padding: var(--space-6) var(--space-5);

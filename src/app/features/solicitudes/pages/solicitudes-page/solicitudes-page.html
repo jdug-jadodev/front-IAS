@@ -29,7 +29,7 @@
       <div class="encabezado-listado">
         <div>
           <h2 id="titulo-recientes">Solicitudes recientes</h2>
-          <p class="texto-secundario">Últimas 20 operaciones registradas por el backend.</p>
+          <p class="texto-secundario">Últimas 20 solicitudes procesadas.</p>
         </div>
         <div class="acciones-listado">
           <span
@@ -54,7 +54,7 @@
 
     <section class="panel panel-inspector" [attr.aria-labelledby]="'titulo-inspector'">
       <div class="encabezado-inspector">
-        <h2 id="titulo-inspector">{{ tituloInspector() }}</h2>
+        <h2 id="titulo-inspector" tabindex="-1">{{ tituloInspector() }}</h2>
         @if (vistaInspector() === 'consulta') {
           <button type="button" class="boton-texto" (click)="volverAlFlujoPrincipal()">
             {{ etiquetaRetorno() }}
@@ -75,6 +75,6 @@
 
   <footer class="contenedor pie-pagina">
     <span>Prueba técnica BancoIAS</span>
-    <span>Estado de sesión en memoria</span>
+    <span>Tu borrador se conserva durante esta sesión</span>
   </footer>
 </div>

@@ -92,11 +92,13 @@ export class SolicitudesPage implements OnInit {
 
   protected mostrarConsulta(): void {
     this.vistaInspector.set('consulta');
+    this.enfocarInspector();
   }
 
   protected mostrarSolicitud(solicitud: SolicitudResultadoModel): void {
     this.store.seleccionarConsulta(solicitud);
     this.vistaInspector.set('consulta');
+    this.enfocarInspector();
   }
 
   protected volverAlFlujoPrincipal(): void {
@@ -105,5 +107,19 @@ export class SolicitudesPage implements OnInit {
         ? 'formulario'
         : 'envio',
     );
+  }
+
+  private enfocarInspector(): void {
+    queueMicrotask(() => {
+      const titulo = this.host.nativeElement.querySelector<HTMLElement>('#titulo-inspector');
+      titulo?.focus({ preventScroll: true });
+      const ventana = this.host.nativeElement.ownerDocument.defaultView;
+      if (
+        typeof ventana?.matchMedia === 'function' &&
+        ventana.matchMedia('(max-width: 58rem)').matches
+      ) {
+        titulo?.scrollIntoView({ block: 'start' });
+      }
+    });
   }
 }

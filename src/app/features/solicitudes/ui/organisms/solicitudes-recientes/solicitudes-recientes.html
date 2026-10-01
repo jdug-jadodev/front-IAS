@@ -15,7 +15,7 @@
   @if (!recientes.cargando && !recientes.error && !recientes.datos.length) {
     <div class="vacio">
       <strong>Aún no hay solicitudes registradas.</strong>
-      <p>Cuando el backend procese una operación, aparecerá en este listado.</p>
+      <p>Cuando se procese una operación, aparecerá en este listado.</p>
     </div>
   }
   @if (recientes.datos.length) {
@@ -25,44 +25,44 @@
       <span>Decisión</span>
     </div>
     <ul class="lista-recientes" aria-label="Solicitudes recientes">
-    @for (solicitud of recientes.datos; track solicitud.applicationReference) {
-      <li>
-        <button
-          type="button"
-          class="fila-solicitud"
-          [attr.aria-current]="
-            store.consulta().datos?.applicationReference === solicitud.applicationReference
-              ? 'true'
-              : null
-          "
-          (click)="solicitudSeleccionada.emit(solicitud)"
-        >
-          <span class="identidad-solicitud">
-            <strong translate="no">{{ solicitud.applicationReference }}</strong>
-            <small translate="no">{{ solicitud.customerId }}</small>
-            <small>{{ solicitud.processedAt | fechaSolicitud }} · Bogotá</small>
-          </span>
-          <span class="monto-listado numero-tabular">
-            {{ solicitud.amount | montoCop }}
-          </span>
-          <span
-            class="estado"
-            [class.estado--aprobado]="solicitud.status === 'APPROVED'"
-            [class.estado--rechazado]="solicitud.status === 'REJECTED'"
+      @for (solicitud of recientes.datos; track solicitud.applicationReference) {
+        <li>
+          <button
+            type="button"
+            class="fila-solicitud"
+            [attr.aria-current]="
+              store.consulta().datos?.applicationReference === solicitud.applicationReference
+                ? 'true'
+                : null
+            "
+            (click)="solicitudSeleccionada.emit(solicitud)"
           >
-            @if (solicitud.status === 'APPROVED') {
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
-              Aprobada
-            } @else {
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="m6 6 12 12M18 6 6 18" />
-              </svg>
-              Rechazada
-            }
-          </span>
-        </button>
-      </li>
-    }
+            <span class="identidad-solicitud">
+              <strong translate="no">{{ solicitud.applicationReference }}</strong>
+              <small translate="no">{{ solicitud.customerId }}</small>
+              <small>{{ solicitud.processedAt | fechaSolicitud }} · Bogotá</small>
+            </span>
+            <span class="monto-listado numero-tabular">
+              {{ solicitud.amount | montoCop }}
+            </span>
+            <span
+              class="estado"
+              [class.estado--aprobado]="solicitud.status === 'APPROVED'"
+              [class.estado--rechazado]="solicitud.status === 'REJECTED'"
+            >
+              @if (solicitud.status === 'APPROVED') {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                Aprobada
+              } @else {
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m6 6 12 12M18 6 6 18" />
+                </svg>
+                Rechazada
+              }
+            </span>
+          </button>
+        </li>
+      }
     </ul>
     <p class="pie-listado">Selecciona una solicitud para consultar su detalle.</p>
   }
