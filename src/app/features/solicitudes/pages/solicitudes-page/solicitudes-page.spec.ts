@@ -539,13 +539,20 @@ describe('Página de solicitudes', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     expect(input.value).toBe('R/Ñ');
     form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
-    http
-      .expectOne(`/api/applications/${encodeURIComponent('R/Ñ')}`)
-      .flush({}, { status: 404, statusText: 'Not Found' });
+    http.expectOne(`/api/applications/${encodeURIComponent('R/Ñ')}`).flush(
+      {
+        code: 'APPLICATION_NOT_FOUND',
+        message: 'No se encontró la solicitud.',
+        traceId: 'trace-404',
+      },
+      { status: 404, statusText: 'Not Found' },
+    );
     fixture.detectChanges();
     await Promise.resolve();
     expect(document.activeElement).toBe(input);
     expect(detalle.textContent).toContain('No se encontró');
+    expect(detalle.textContent).not.toContain('APPLICATION_NOT_FOUND');
+    expect(detalle.textContent).not.toContain('trace-404');
 
     input.value = 'segunda';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -608,6 +615,12 @@ describe('Página de solicitudes', () => {
 
     expect(store.consulta().datos).toEqual(recientes[1]);
     expect(element.querySelector('.consulta-detalle')?.textContent).toContain('REF-SEGUNDA');
+    expect(element.querySelector('.consulta-detalle')?.textContent).toContain(
+      'Política de crédito.',
+    );
+    expect(element.querySelector('.consulta-detalle')?.textContent).not.toContain(
+      'CUSTOMER_BLOCKED',
+    );
     expect(filas[1].getAttribute('aria-current')).toBe('true');
     expect(element.querySelector<HTMLElement>('section#consulta')!.hidden).toBe(false);
     http.expectNone('/api/applications/REF-SEGUNDA');

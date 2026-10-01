@@ -6,7 +6,7 @@
 
   @if (store.envio(); as estado) {
     @if (estado.tipo === 'invalid') {
-      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+      <app-mensaje [texto]="estado.error.message" />
     }
   }
 

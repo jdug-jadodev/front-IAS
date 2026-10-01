@@ -21,12 +21,12 @@
       </div>
     }
     @case ('invalid') {
-      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+      <app-mensaje [texto]="estado.error.message" />
       <p class="ayuda">Revisa el mensaje, ajusta la solicitud y vuelve a enviarla.</p>
     }
     @case ('conflict') {
       <p class="estado estado--conflicto">Envío en conflicto</p>
-      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+      <app-mensaje [texto]="estado.error.message" />
       <p class="ayuda">Inicia una nueva solicitud para usar una clave de envío diferente.</p>
       <div class="acciones">
         <button type="button" (click)="nuevaSolicitudSolicitada.emit()">Nueva solicitud</button>
@@ -52,11 +52,7 @@
           <dd>{{ estado.datos.termMonths }} meses</dd>
         </div>
       </dl>
-      <app-mensaje
-        tono="info"
-        [texto]="estado.error.message"
-        [detalle]="estado.error.traceId ?? ''"
-      />
+      <app-mensaje tono="info" [texto]="estado.error.message" />
       @if (store.recuperando()) {
         <app-indicador-carga texto="Reintentando el envío original…" />
       }

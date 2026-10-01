@@ -3,7 +3,7 @@
   <app-indicador-carga texto="Consultando referencia…" />
   <p class="ayuda">La consulta no modifica el borrador ni el resultado del último envío.</p>
 } @else if (consulta.error; as error) {
-  <app-mensaje [texto]="error.message" [detalle]="error.traceId ?? ''" />
+  <app-mensaje [texto]="error.message" />
   <p class="ayuda">Verifica la referencia o intenta la consulta nuevamente.</p>
 } @else if (consulta.datos; as datos) {
   <div role="status" aria-live="polite">
