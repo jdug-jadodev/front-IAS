@@ -1,0 +1,12 @@
+services:
+  frontend:
+    build:
+      context: .
+    environment:
+      BACKEND_URL: ${BACKEND_URL:?Define BACKEND_URL en .env}
+      NGINX_ENVSUBST_FILTER: BACKEND_URL
+    ports:
+      - "4200:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
