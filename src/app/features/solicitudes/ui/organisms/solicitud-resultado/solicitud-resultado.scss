@@ -1,0 +1,48 @@
+.solicitud-resultado {
+  display: grid;
+  gap: 1rem;
+}
+
+.referencia-operacion {
+  margin-top: var(--space-2);
+  overflow-wrap: anywhere;
+}
+
+.referencia-pendiente {
+  margin-top: var(--space-1);
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.resumen-pendiente {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-2) 0;
+}
+
+.resumen-pendiente div:last-child {
+  grid-column: 1 / -1;
+}
+
+.resumen-pendiente dt {
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}
+
+.resumen-pendiente dd {
+  margin: var(--space-1) 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 24rem) {
+  .resumen-pendiente {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .resumen-pendiente div:last-child {
+    grid-column: auto;
+  }
+}

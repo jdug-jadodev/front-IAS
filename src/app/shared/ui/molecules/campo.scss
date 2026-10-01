@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.campo {
+  display: grid;
+  gap: 0.35rem;
+}
+label {
+  margin-bottom: 0.15rem;
+  color: var(--color-text-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+small {
+  display: block;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+.error-campo {
+  color: var(--color-error);
+}
+.error-campo:empty {
+  display: none;
+}

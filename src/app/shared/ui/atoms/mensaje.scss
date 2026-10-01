@@ -1,0 +1,22 @@
+.mensaje {
+  margin-block: var(--space-4);
+  border: 1px solid #416d8a;
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+  background: var(--color-info-surface);
+  color: var(--color-info);
+  font-size: 0.6875rem;
+}
+.mensaje--error {
+  border-color: #7d4b58;
+  background: var(--color-error-surface);
+  color: var(--color-error);
+}
+p {
+  margin: 0;
+}
+small {
+  display: block;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}

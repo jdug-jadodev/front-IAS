@@ -1,0 +1,32 @@
+<div id="consulta-referencia" class="consulta-referencia">
+  <form
+    aria-label="Consultar una solicitud por referencia"
+    [formGroup]="form"
+    (ngSubmit)="consultar()"
+    novalidate
+    autocomplete="off"
+  >
+    <app-campo
+      controlId="referencia-consulta"
+      etiqueta="Consultar por referencia"
+      [error]="referencia.touched && referencia.invalid ? 'Escribe una referencia.' : ''"
+    >
+      <input
+        id="referencia-consulta"
+        name="reference"
+        type="text"
+        appMayusculas
+        formControlName="referencia"
+        placeholder="Ej. REF-001"
+        autocomplete="off"
+        spellcheck="false"
+        required
+        aria-describedby="referencia-consulta-error"
+        [attr.aria-invalid]="referencia.touched && referencia.invalid"
+      />
+    </app-campo>
+    <button type="submit" [disabled]="store.consulta().cargando">
+      {{ store.consulta().cargando ? 'Consultando…' : 'Consultar' }}
+    </button>
+  </form>
+</div>

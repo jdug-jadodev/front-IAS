@@ -1,0 +1,46 @@
+@let datos = resultado();
+<div class="resumen-resultado">
+  <p
+    class="estado"
+    [class.estado--aprobado]="datos.status === 'APPROVED'"
+    [class.estado--rechazado]="datos.status === 'REJECTED'"
+  >
+    @if (datos.status === 'APPROVED') {
+      Aprobada
+    } @else {
+      Rechazada
+    }
+  </p>
+  <h3 class="referencia" translate="no">{{ datos.applicationReference }}</h3>
+  <p class="texto-secundario">{{ datos.message }}</p>
+</div>
+
+<div class="monto-destacado">
+  <p class="etiqueta">Monto solicitado</p>
+  <p class="monto numero-tabular">{{ datos.amount | montoCop }} <small>COP</small></p>
+</div>
+
+<dl class="detalle-resultado">
+  <div>
+    <dt>ID del cliente</dt>
+    <dd translate="no">{{ datos.customerId }}</dd>
+  </div>
+  <div>
+    <dt>Plazo</dt>
+    <dd>{{ datos.termMonths }} meses</dd>
+  </div>
+  <div class="ancho-completo">
+    <dt>Fecha de procesamiento</dt>
+    <dd>
+      <time [attr.datetime]="datos.processedAt">{{ datos.processedAt | fechaSolicitud }}</time> ·
+      Bogotá
+    </dd>
+  </div>
+</dl>
+@if (datos.status === 'REJECTED') {
+  <div class="motivo-rechazo">
+    <strong>Motivo de la decisión</strong>
+    <p>{{ datos.reason }}</p>
+    <p class="codigo" translate="no">Código: {{ datos.reasonCode }}</p>
+  </div>
+}

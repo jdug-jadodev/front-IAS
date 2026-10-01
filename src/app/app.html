@@ -1,0 +1,15 @@
+<a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+<header class="cabecera-app">
+  <div class="contenedor cabecera-contenido">
+    <a class="marca" [routerLink]="['/']" fragment="solicitud" aria-label="BancoIAS, inicio">
+      Banco<span>IAS</span><i aria-hidden="true"></i>
+    </a>
+    <nav class="navegacion" aria-label="Solicitudes">
+      <a [routerLink]="['/']" fragment="consulta">Consultar <span>solicitud</span></a>
+      <a [routerLink]="['/']" fragment="recientes">Recientes</a>
+    </nav>
+  </div>
+</header>
+<main id="contenido" tabindex="-1">
+  <router-outlet />
+</main>

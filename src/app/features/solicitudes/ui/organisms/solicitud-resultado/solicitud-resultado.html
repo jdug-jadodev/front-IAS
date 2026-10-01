@@ -1,0 +1,70 @@
+@let estado = store.envio();
+<div class="solicitud-resultado">
+  @switch (estado.tipo) {
+    @case ('idle') {
+      <p class="vacio">El resultado aparecerá aquí después de enviar una solicitud.</p>
+    }
+    @case ('submitting') {
+      <app-indicador-carga texto="Enviando solicitud…" />
+      <p class="ayuda">
+        Conservamos una copia exacta de los datos mientras esperamos la respuesta.
+      </p>
+    }
+    @case ('resolved') {
+      <div role="status" aria-live="polite">
+        <app-resultado-detalle [resultado]="estado.resultado" />
+      </div>
+      <div class="acciones">
+        <button type="button" class="boton-primario" (click)="nuevaSolicitudSolicitada.emit()">
+          Nueva solicitud
+        </button>
+      </div>
+    }
+    @case ('invalid') {
+      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+      <p class="ayuda">Revisa el mensaje, ajusta la solicitud y vuelve a enviarla.</p>
+    }
+    @case ('conflict') {
+      <p class="estado estado--conflicto">Envío en conflicto</p>
+      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+      <p class="ayuda">Inicia una nueva solicitud para usar una clave de envío diferente.</p>
+      <div class="acciones">
+        <button type="button" (click)="nuevaSolicitudSolicitada.emit()">Nueva solicitud</button>
+      </div>
+    }
+    @case ('unconfirmed') {
+      <p class="estado estado--pendiente">Resultado sin confirmar</p>
+      <p class="texto-secundario">
+        Aún no recibimos la referencia. Conservamos los datos y la clave del envío original para
+        reintentarlo sin crear otra solicitud.
+      </p>
+      <dl class="resumen-pendiente">
+        <div>
+          <dt>Cliente</dt>
+          <dd translate="no">{{ estado.datos.customerId }}</dd>
+        </div>
+        <div>
+          <dt>Monto</dt>
+          <dd>{{ estado.datos.amount }} COP</dd>
+        </div>
+        <div>
+          <dt>Plazo</dt>
+          <dd>{{ estado.datos.termMonths }} meses</dd>
+        </div>
+      </dl>
+      <app-mensaje
+        tono="info"
+        [texto]="estado.error.message"
+        [detalle]="estado.error.traceId ?? ''"
+      />
+      @if (store.recuperando()) {
+        <app-indicador-carga texto="Reintentando el envío original…" />
+      }
+      <div class="acciones">
+        <button type="button" [disabled]="store.recuperando()" (click)="store.reintentarEnvio()">
+          Reintentar mismo envío
+        </button>
+      </div>
+    }
+  }
+</div>

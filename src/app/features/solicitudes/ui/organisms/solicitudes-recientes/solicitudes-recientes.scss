@@ -1,0 +1,144 @@
+.solicitudes-recientes > app-indicador-carga,
+.solicitudes-recientes > app-mensaje,
+.solicitudes-recientes > .ayuda,
+.solicitudes-recientes > .vacio {
+  display: block;
+  margin-inline: var(--space-5);
+}
+
+.vacio strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-strong);
+}
+
+.cabecera-fila,
+.fila-solicitud {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(5.5rem, 0.85fr) minmax(5.25rem, 0.7fr);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cabecera-fila {
+  border-block: 1px solid var(--color-border);
+  padding: 0.625rem 1rem;
+  background: var(--color-background);
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.cabecera-fila span:nth-child(2),
+.monto-listado {
+  text-align: right;
+}
+
+.lista-recientes {
+  max-height: 38rem;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.lista-recientes li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+.fila-solicitud {
+  width: 100%;
+  min-height: 4.375rem;
+  border: 0;
+  border-radius: 0;
+  padding: 1.0625rem 1rem;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.fila-solicitud:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--color-surface-muted);
+}
+
+.fila-solicitud[aria-current='true'] {
+  background: var(--color-surface-muted);
+  box-shadow: inset 3px 0 var(--color-brand-blue);
+}
+
+.fila-solicitud:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline-offset: -4px;
+}
+
+.identidad-solicitud {
+  display: grid;
+  min-width: 0;
+  gap: 0.15rem;
+}
+
+.identidad-solicitud strong {
+  color: var(--color-link);
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.identidad-solicitud small {
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+  overflow-wrap: anywhere;
+}
+
+.monto-listado {
+  color: var(--color-text-strong);
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.estado {
+  justify-self: start;
+}
+
+.estado svg {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+}
+
+.pie-listado {
+  border-top: 1px solid var(--color-border);
+  padding: 0.75rem 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.6875rem;
+}
+
+@media (max-width: 27.5rem) {
+  .solicitudes-recientes > app-indicador-carga,
+  .solicitudes-recientes > app-mensaje,
+  .solicitudes-recientes > .ayuda,
+  .solicitudes-recientes > .vacio {
+    margin-inline: 0.875rem;
+  }
+
+  .cabecera-fila {
+    padding-inline: 0.625rem;
+  }
+
+  .lista-recientes {
+    max-height: none;
+  }
+
+  .fila-solicitud {
+    gap: 0.5rem;
+    padding: 0.8125rem 0.625rem;
+  }
+
+  .pie-listado {
+    padding-inline: 0.9375rem;
+  }
+}
