@@ -1,6 +1,6 @@
 # Arquitectura del frontend de créditos
 
-**Estado:** diseño para implementar. No incluye estilos, código funcional ni pruebas ejecutadas.
+**Estado al 1 de octubre de 2026:** arquitectura implementada en Angular 22.2, con estilos BancoIAS, build de producción y 74 pruebas unitarias aprobadas. La validación end-to-end contra Docker sigue fuera de este repositorio.
 
 **Base:** el enunciado pide registrar solicitudes, mostrar su resultado y consultar las recientes. La concurrencia y las referencias repetidas deben estar protegidas en el core. [^prueba]
 
@@ -21,32 +21,34 @@ Este documento concreta el frontend de `ARQUITECTURA.md`. Mantiene sus rutas, re
 
 No usaremos arquitectura hexagonal completa en el frontend por ahora. Tampoco una fachada adicional encima del store: aquí **el store ya es la entrada a las acciones de la pantalla**.
 
-## 2. Estructura propuesta
+## 2. Estructura implementada
 
 ```text
-frontend/
-├── Dockerfile
-├── nginx.conf
-└── src/app/
-    ├── app.config.ts
-    ├── app.routes.ts
-    ├── shared/ui/
-    │   ├── atoms/                   # Mensaje de error, indicador de carga
-    │   └── molecules/               # Campo con etiqueta, ayuda y error
-    └── features/solicitudes/
-        ├── pages/solicitudes-page/
-        ├── ui/organisms/
-        │   ├── solicitud-form/
-        │   ├── solicitud-resultado/
-        │   ├── solicitudes-recientes/
-        │   └── consulta-referencia/
-        ├── state/solicitudes.store.ts
-        ├── api/
-        │   ├── solicitudes-api.service.ts
-        │   ├── solicitud-response.parser.ts
-        │   └── error-api.mapper.ts
-        ├── models/solicitud.model.ts
-        └── validation/solicitud-form.validators.ts
+src/app/
+├── app.config.ts
+├── app.routes.ts
+├── shared/ui/
+│   ├── atoms/                       # Mensaje e indicador de carga
+│   └── molecules/                   # Campo con etiqueta, ayuda y error
+└── features/solicitudes/
+    ├── pages/solicitudes-page/
+    ├── ui/
+    │   ├── organisms/
+    │   │   ├── solicitud-form/
+    │   │   ├── solicitud-resultado/
+    │   │   ├── solicitudes-recientes/
+    │   │   ├── consulta-referencia/
+    │   │   └── consulta-resultado/
+    │   └── pipes/
+    │       ├── monto-cop.pipe.ts
+    │       └── fecha-solicitud.pipe.ts
+    ├── state/solicitudes.store.ts
+    ├── api/
+    │   ├── solicitudes-api.service.ts
+    │   ├── solicitud-response.parser.ts
+    │   └── error-api.mapper.ts
+    ├── models/solicitud.model.ts
+    └── validation/solicitud-form.validators.ts
 ```
 
 Cada prueba `.spec.ts` irá junto a su archivo. No crear carpetas vacías. `templates` se incorporará cuando exista una distribución reutilizable; para una sola pantalla, la página puede componer los organismos directamente. [^organizacion]
@@ -64,9 +66,10 @@ Preferir controles HTML nativos. No construir inputs personalizados con adaptado
 ```text
 SolicitudesPage proporciona una instancia de SolicitudesStore
     ├── SolicitudForm          → llama enviar()
-    ├── SolicitudResultado     → lee resultado y estado
+    ├── SolicitudResultado     → lee resultado y estado de envío
     ├── SolicitudesRecientes   → lee recientes; llama cargarRecientes()
-    └── ConsultaReferencia     → llama consultarPorReferencia()
+    ├── ConsultaReferencia     → llama consultarPorReferencia()
+    └── ConsultaResultado      → presenta una consulta independiente
 
 SolicitudesStore → SolicitudesApiService → HttpClient → Backend
 ```
@@ -103,7 +106,7 @@ No copiar cada pulsación del formulario a un estado global. El store recibe una
 
 Las Signals modificables serán privadas y se expondrán para lectura. Los cambios ocurrirán mediante acciones del store. Usar `computed` para valores derivados y reemplazar objetos/listas en vez de mutarlos desde los componentes. `asReadonly()` no impide por sí solo modificar objetos internos. [^signals]
 
-Acciones previstas: `enviar(datos)`, `reintentarEnvio()`, `consultarEnvioPendiente()`, `cargarRecientes()`, `consultarPorReferencia(referencia)` y `nuevaSolicitud()`.
+Acciones implementadas: `enviar(datos)`, `reintentarEnvio()`, `consultarEnvioPendiente()`, `cargarRecientes()`, `consultarPorReferencia(referencia)`, `seleccionarConsulta(resultado)` y `nuevaSolicitud()`.
 
 No disparar un POST desde un `effect`, desde la plantilla ni por cambios automáticos en los campos.
 
@@ -115,7 +118,7 @@ Usar validadores de Reactive Forms y funciones propias pequeñas. Las reglas se 
 |---|---|
 | `applicationReference` | Obligatorio; no vacío ni compuesto solo por espacios. Editable antes del envío. |
 | `customerId` | Obligatorio; no vacío ni compuesto solo por espacios. |
-| `amount` | Obligatorio, numérico, finito y estrictamente mayor que cero. |
+| `amount` | String decimal con punto, sin exponente ni separadores; estrictamente mayor que cero. |
 | `termMonths` | Obligatorio, entero, entre 6 y 60 inclusive. |
 
 No imponer formatos como `REF-001` o `CLI-1001`: son ejemplos del documento, no patrones obligatorios. No cambiar mayúsculas ni transformar identificadores silenciosamente. [^datos]
@@ -126,19 +129,23 @@ Mostrar errores después de interactuar con el campo o intentar enviar. Un enví
 
 **Esto no elimina los rechazos persistidos:** el backend seguirá guardando los rechazos de solicitudes que reciba y procese, incluidos casos enviados directamente por API. Los datos detenidos en el navegador todavía no son solicitudes procesadas.
 
-**Dinero:** no calcular cupos ni redondear importes en JavaScript. La precisión, escala y representación definitiva de `amount` se cerrarán con el contrato monetario del backend al modelar datos. No imponer enteros, dos decimales o un máximo nuevo por cuenta del frontend. Hasta cerrar ese punto, los ejemplos de integración usan el número JSON del enunciado, no una garantía de precisión decimal arbitraria. [^datos]
+**Dinero:** `amount` viaja como string decimal en COP. No calcular cupos, convertir a punto flotante ni redondear en JavaScript. La comparación normaliza texto decimal y la presentación agrupa la parte entera con `BigInt` e `Intl.NumberFormat`, conservando la fracción original. El frontend no impone dos decimales, un máximo o una escala nueva; esos límites siguen perteneciendo al contrato del backend. [^datos]
 
 ## 6. Un envío a la vez, sin perder la protección real
 
 **Sí bloquearemos el botón y la edición mientras se envía.** Eso mejora la interacción, pero la protección entre pestañas, usuarios y llamadas directas sigue siendo del backend. [^prueba]
 
-Recorrido previsto:
+Recorrido implementado:
 
-1. El formulario valida y obtiene sus datos con `getRawValue()` antes de deshabilitar controles. [^formularios]
-2. `enviar()` comprueba el estado. Si ya hay un envío activo, termina sin hacer otro POST.
-3. El store conserva una copia independiente del cuerpo y pasa a `submitting` **antes** de iniciar HTTP.
-4. La interfaz bloquea enviar, limpiar y editar. Un único `(ngSubmit)` sirve para botón y teclado; no duplicar el envío con otro `(click)`.
-5. La respuesta actualiza el estado. El resultado permanece visible hasta iniciar explícitamente otra solicitud.
+1. El formulario valida y obtiene sus datos con `getRawValue()`. [^formularios]
+2. Un snapshot inmutable alimenta el paso de revisión; todavía no existe un POST.
+3. La persona puede editar sin perder valores o confirmar los cuatro datos.
+4. `enviar()` comprueba el estado. Si ya hay un envío activo, termina sin hacer otro POST.
+5. El store conserva otra copia independiente y pasa a `submitting` **antes** de iniciar HTTP.
+6. La interfaz bloquea acciones incompatibles. Dos clics de confirmación producen una sola petición.
+7. La respuesta actualiza el estado. El resultado permanece visible hasta iniciar explícitamente otra solicitud.
+
+El descarte de un formulario modificado usa una confirmación dentro de la página. No se presenta una acción destructiva inmediata ni se pierde el borrador al alternar con consultas.
 
 El API service devuelve Observables sin suscribirse. El store realiza una sola suscripción por acción. Dos suscripciones a la misma petición de `HttpClient` pueden producir dos peticiones reales. [^http]
 
@@ -171,7 +178,7 @@ Ejecutar una sola acción de recuperación a la vez: consulta o reintento. Bloqu
 
 Si la consulta encuentra los mismos datos, recuperar el resultado. Si encuentra datos distintos, mostrar conflicto. Un 404 durante la recuperación significa que todavía no se encontró el registro; no demuestra que otra petición haya terminado. Puede repetirse el envío original, protegido por la idempotencia del backend.
 
-No habrá reintentos automáticos de POST. Se definirá un tiempo máximo de espera configurable para no dejar la pantalla ocupada indefinidamente; agotarlo lleva a `unconfirmed`, no a `REJECTED`.
+No hay reintentos automáticos de POST. El tiempo máximo es de 15 segundos por defecto y se configura con `SOLICITUD_TIMEOUT_MS`; agotarlo lleva a `unconfirmed`, no a `REJECTED`.
 
 El estado es de memoria: al recargar se pierde el borrador. No guardar solicitudes en `localStorage` en esta versión. La consulta manual por referencia permite recuperar resultados persistidos; recuperar automáticamente un borrador tras recargar queda fuera del alcance.
 
@@ -203,7 +210,7 @@ Cargar recientes al entrar, después de confirmar un resultado y al pulsar actua
 
 **Datos:** sin credenciales de PostgreSQL o RabbitMQ en Angular, sin registros completos del formulario en consola y sin almacenamiento persistente de solicitudes en el navegador.
 
-**Accesibilidad:** usar etiquetas asociadas a los campos, mensajes vinculados al control, botones nativos y una zona de aviso accesible para resultado/error. El estado debe explicarse con texto, no solo con color o un indicador de carga. Esto se decide ahora, aunque los estilos se diseñen después. [^accesibilidad]
+**Accesibilidad:** usar etiquetas asociadas a los campos, mensajes vinculados al control, botones nativos y una zona de aviso accesible para resultado/error. El estado se explica con texto e icono. La implementación incluye foco visible, controles de 44 px y traslado de foco al inspector en una columna. [^accesibilidad]
 
 **Límite de seguridad:** este alcance es una demostración local. No incluye autenticación ni autorización. No exponer datos reales o desplegarlo públicamente sin definir esos controles en el backend, HTTPS y protección contra abuso. Ni botones bloqueados, ni CORS, ni guards del frontend reemplazan esos controles. [^seguridad]
 
@@ -215,31 +222,31 @@ El retorno de `index.html` para rutas de Angular no debe capturar errores de `/a
 
 Para desarrollo con Angular CLI, configurar un proxy equivalente. El destino depende de si el servidor de desarrollo corre en el host o dentro de Docker. [^proxy]
 
-La cola futura se conectará al backend, nunca directamente al navegador. Versiones de Angular, Node y dependencias se fijarán al inicializar el proyecto, con archivo de bloqueo; no asumir versiones todavía no acordadas.
+La cola futura se conectará al backend, nunca directamente al navegador. Angular 22.2, Node 24 y npm 11 están fijados en el manifiesto y el archivo de bloqueo.
 
-## 11. Qué probaremos
+## 11. Qué se prueba
 
-Pruebas de componentes y store con las herramientas de Angular; HTTP simulado con `HttpTestingController`. La integración real se comprobará también contra el entorno Docker, no solo con respuestas simuladas. [^pruebas]
+Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingController`. En el último cierre pasan 74 pruebas de 9 archivos. La integración real todavía debe comprobarse con el backend activo y, cuando exista en este repositorio, el entorno Docker. [^pruebas]
 
 | Prueba | Resultado esperado |
 |---|---|
-| Campos y límites | Vacíos y monto cero no envían; plazos 6 y 60 pasan, 5, 61 y fracciones fallan. |
-| Doble envío | Dos llamadas rápidas al store y doble interacción botón/teclado producen un solo POST activo. |
+| Campos y límites | Vacíos y monto cero no envían; plazos 6 y 60 pasan, 5, 61 y fracciones fallan; el primer inválido recibe foco. |
+| Revisión y doble envío | El POST espera confirmación; editar conserva valores y dos confirmaciones rápidas producen un solo POST. |
 | Respuesta perdida | Reintento con referencia y cuerpo originales; no aparece un rechazo inventado. |
 | Decisión y errores | 201 con `REJECTED` se muestra como rechazo; 200, 400, 404, 409 y 5xx siguen sus flujos. |
 | Estados compartidos | Los organismos usan el mismo store; errores de consultas no alteran el envío. |
 | HTTP y respuesta inválida | Rutas, cuerpos, códigos y parser correctos; respuesta desconocida nunca se muestra como aprobada. |
-| Recientes y entorno real | La actualización fallida no repite el POST; formulario, resultado y listado funcionan con Docker. |
+| Recientes | La actualización fallida no repite el POST ni borra un resultado confirmado. |
 
-La concurrencia del core se verifica además con peticiones simultáneas directamente al backend y PostgreSQL real. No añadiremos un botón de “enviar muchas veces” ni quitaremos las protecciones del formulario para demostrarla. [^prueba]
+La concurrencia del core debe verificarse además con peticiones simultáneas directamente al backend y PostgreSQL real. No añadiremos un botón de “enviar muchas veces” ni quitaremos las protecciones del formulario para demostrarla. [^prueba]
 
-**Pendiente:** cerrar precisión/escala/representación monetaria, fijar versiones e implementar. Estilos, hexagonal frontend, login, estado persistente, colas y funcionalidades adicionales no forman parte de esta etapa.
+**Pendiente fuera del frontend:** confirmar escala y respuestas monetarias con ejemplos reales, revalidar un POST end-to-end y añadir Docker/Nginx si se incorpora despliegue a este repositorio. Login, estado persistente, colas y funcionalidades adicionales no forman parte de esta etapa.
 
 ---
 
 ## Referencias
 
-El enunciado define requisitos. `ARQUITECTURA.md` define acuerdos previos. Las decisiones concretas del frontend son propuestas de este documento; las fuentes técnicas explican las capacidades utilizadas, no imponen esta estructura.
+El enunciado define requisitos. `ARQUITECTURA.md` define acuerdos previos. Este documento registra las decisiones concretas implementadas; las fuentes técnicas explican las capacidades utilizadas, no imponen esta estructura.
 
 [^prueba]: `Prueba_Tecnica_Full_Stack_Java_Spring_Boot_WebFlux_Angular_Core_Creditos.pdf`, página 2, RF02–RF07, restricciones y pruebas automatizadas.
 [^datos]: Mismo enunciado, página 1, datos mínimos y ejemplos; página 2, RF02.

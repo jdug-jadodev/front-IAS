@@ -1,6 +1,17 @@
-# Contexto de implementación: frontend de créditos
+# Contexto para continuar el frontend de créditos
 
-Diseño, no código implementado. Ampliación de `ARQUITECTURA.md`; decisiones y fuentes completas en `ARQUITECTURA_FRONTEND.md`. No modificar el backend, modelar tablas ni diseñar estilos en esta etapa.
+**Estado al 1 de octubre de 2026:** implementación funcional en Angular 22.2, con interfaz BancoIAS, pruebas unitarias y build de producción. Este archivo resume las decisiones que una IA o una persona debe conservar al modificar el proyecto.
+
+## Reglas que no deben romperse
+
+1. `amount` es un `string` decimal desde el formulario hasta `HttpClient`; no usar `Number`, `parseFloat` ni redondeos.
+2. El POST solo ocurre después de una revisión explícita de los cuatro datos.
+3. Un envío activo admite una sola petición. La protección de UI no sustituye la idempotencia del backend.
+4. Red, timeout, 5xx o respuesta incompatible producen `unconfirmed`; nunca inventar una decisión.
+5. En recuperación se reutiliza la copia exacta de referencia, cliente, monto y plazo.
+6. Envío, consulta y recientes mantienen estados independientes.
+7. Los datos externos se presentan como texto; no usar HTML recibido ni desactivar la sanitización.
+8. Los commits de implementación usan mensajes en español y unidades coherentes de unas 400 líneas como cadencia orientativa.
 
 ## Arquitectura
 
@@ -8,7 +19,7 @@ Angular standalone, TypeScript y plantillas estrictos, Reactive Forms tipados, S
 
 `shared/ui/atoms` y `shared/ui/molecules`: piezas genéricas, sin HTTP ni store de créditos. Preferir controles HTML nativos. No crear wrappers o carpetas vacías para completar categorías atómicas.
 
-`features/solicitudes` contiene `pages`, `ui/organisms`, `state`, `api`, `models` y `validation`. Organismos: formulario, resultado, recientes y consulta por referencia. Pruebas junto a cada archivo.
+`features/solicitudes` contiene `pages`, `ui/organisms`, `ui/pipes`, `state`, `api`, `models` y `validation`. Organismos: formulario, resultado de envío, recientes, consulta por referencia y resultado de consulta. Pruebas junto a cada archivo.
 
 ## Comunicación y estado
 
@@ -28,11 +39,13 @@ Referencia y cliente obligatorios y no blancos. Monto numérico, finito y mayor 
 
 No imponer patrones a identificadores ni cambiarlos silenciosamente. No verificar cupo, existencia/habilitación del cliente o unicidad para bloquear solicitudes. Backend decide y conserva rechazos; validaciones del navegador no sustituyen sus reglas.
 
-No redondear ni calcular dinero. Precisión, escala y representación monetaria están pendientes de cerrar con backend; no inventarlas. Los ejemplos actuales usan monto numérico JSON, sin prometer precisión decimal arbitraria.
+No redondear ni calcular dinero. El transporte confirmado usa un string decimal en COP con punto; el frontend no impone una escala o máximo adicionales. El parser conserva compatibilidad provisional con números JSON seguros, pero el formato recomendado para precisión arbitraria es texto.
 
 ## Envío y recuperación
 
-Único `(ngSubmit)`. Validar también en el manejador. Obtener `getRawValue()` antes de deshabilitar controles. Store comprueba el estado, copia los cuatro datos y marca `submitting` antes de HTTP. Bloquear enviar, limpiar y editar. Una segunda llamada activa no genera otro POST.
+Único `(ngSubmit)`. Validar también en el manejador y obtener `getRawValue()`. Un formulario válido crea un snapshot inmutable y muestra “Revisa antes de enviar”; solo “Confirmar y enviar” llama al store. El store vuelve a copiar los cuatro datos y marca `submitting` antes de HTTP. Una segunda llamada activa no genera otro POST.
+
+“Editar datos” vuelve al formulario sin perder valores. “Descartar datos” pide confirmación si el borrador fue modificado. Consultar otra referencia tampoco desmonta el formulario ni borra el borrador.
 
 API devuelve Observables sin suscribirse; store tiene una suscripción controlada por acción, errores explícitos y limpieza con `takeUntilDestroyed`. No lanzar POST desde effects, no `switchMap` para POST, no colas ni reintentos automáticos. GET puede usar `switchMap` para descartar consultas antiguas.
 
@@ -60,6 +73,14 @@ Actualizar recientes al entrar, confirmar y actualizar manualmente. Error del li
 
 Texto normal, no HTML de API ni bypass de sanitización. Sin secretos, solicitudes en almacenamiento persistente o logs completos. Etiquetas, teclado y avisos accesibles desde ahora. Sin autenticación/autorización: demo local, no despliegue público con datos reales.
 
-Docker: construir con Node y servir con Nginx. Navegador usa `/api`; proxy a `backend:8080` quitando prefijo. Fallos API no devuelven index.html. Cola futura solo con backend. Fijar versiones al implementar.
+Docker: construir con Node y servir con Nginx. Navegador usa `/api`; proxy a `backend:8080` quitando prefijo. Fallos API no devuelven index.html. Cola futura solo con backend. El proyecto fija Angular 22.2, Node 24 y npm 11.
 
-Probar validaciones, doble envío, snapshot de reintento, respuestas, estados independientes, parser, listado y proxy real. Concurrencia del core se prueba directamente en backend con PostgreSQL real; no quitar bloqueo de botones. No afirmar pruebas ejecutadas.
+La suite ejecutada cubre validaciones, cuerpo exacto, revisión, doble envío, snapshot de reintento, respuestas, estados independientes, parser, listado, descarte y foco. La integración real requiere además el backend activo en `localhost:8080`; la concurrencia del core debe probarse directamente allí, sin quitar el bloqueo de botones.
+
+## Presentación implementada
+
+Identidad IAS con azul marino, azul brillante, amarillo y rosa como acentos contenidos; Montserrat con Arial como fallback. La pantalla usa una composición maestro–detalle: búsqueda e historial a la izquierda e inspector contextual a la derecha. En móvil se apila, traslada el foco al resultado y no debe producir desplazamiento horizontal.
+
+Los controles miden al menos 44 px, el foco es visible y los estados usan texto e icono. Las fechas se muestran en `America/Bogota`; los importes se formatean con `BigInt` e `Intl.NumberFormat`, sin perder la fracción textual.
+
+El estado vive en memoria y no usa `localStorage`. No hay login, permisos, modo oscuro ni cola en el navegador. `bancoias-identidad-ias.html` es una referencia visual: no importarlo ni ejecutar su JavaScript dentro de Angular.

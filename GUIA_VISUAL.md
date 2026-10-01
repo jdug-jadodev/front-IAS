@@ -1,6 +1,6 @@
-# Guía visual propuesta para el sistema de créditos
+# Guía visual implementada para BancoIAS
 
-**Estado:** propuesta inicial. Define criterios y tokens; no implica que los estilos ya estén implementados.
+**Estado al 1 de octubre de 2026:** identidad y tokens aplicados en la interfaz Angular. `bancoias-identidad-ias.html` se utilizó como autoridad visual, no como código de producción.
 
 Esta guía busca una interfaz sobria, clara y confiable para registrar y consultar solicitudes de crédito. La presentación debe ayudar a distinguir datos, acciones y estados sin depender únicamente del color.
 
@@ -10,56 +10,55 @@ Esta guía busca una interfaz sobria, clara y confiable para registrar y consult
 - **Claridad:** priorizar etiquetas explícitas, mensajes breves y suficiente espacio entre bloques.
 - **Accesibilidad:** mantener contraste WCAG AA, foco visible y estados acompañados por texto e iconos.
 - **Consistencia:** consumir tokens semánticos en lugar de repetir valores directos en componentes.
-- **Sobriedad:** evitar gradientes decorativos, sombras fuertes y animaciones que distraigan del proceso.
+- **Sobriedad:** reservar el gradiente para la franja de marca; evitar gradientes adicionales, sombras fuertes y animaciones que distraigan del proceso.
 
 ## 2. Paleta base
 
 ### Marca y acciones
 
-| Token sugerido | Color | Uso |
+| Token | Color | Uso |
 |---|---:|---|
-| `--color-primary` | `#1D4ED8` | Acción principal, enlaces y elementos activos. |
-| `--color-primary-hover` | `#1E40AF` | Hover de la acción principal. |
-| `--color-primary-strong` | `#1E3A8A` | Encabezados destacados o navegación. |
-| `--color-secondary` | `#0F766E` | Acciones secundarias y acentos puntuales. |
-| `--color-focus` | `#2563EB` | Anillo de foco visible. |
+| `--color-brand-navy` | `#023365` | Cabecera, títulos fuertes e identidad BancoIAS. |
+| `--color-brand-blue` | `#0997E6` | Acento IAS e interacción. |
+| `--color-brand-yellow` | `#FEBD04` | Acción primaria y franja de marca. |
+| `--color-brand-pink` | `#FB2F70` | Acento limitado en la franja de marca. |
+| `--color-focus` | `#087FBE` | Anillo de foco visible. |
 
-Usar texto blanco sobre los colores primario, primario intenso y secundario. No usar el azul primario para comunicar por sí solo el estado de una solicitud.
+El botón principal usa amarillo con texto azul marino. El masthead usa azul marino con texto blanco. Ningún color de marca comunica por sí solo el estado de una solicitud.
 
 ### Superficies y texto
 
-| Token sugerido | Color | Uso |
+| Token | Color | Uso |
 |---|---:|---|
-| `--color-background` | `#F7F9FC` | Fondo general de la aplicación. |
+| `--color-background` | `#F1F5FA` | Fondo general de la aplicación. |
 | `--color-surface` | `#FFFFFF` | Tarjetas, formulario y paneles. |
-| `--color-surface-muted` | `#F1F5F9` | Cabeceras de tabla y secciones secundarias. |
-| `--color-text` | `#172033` | Texto principal. |
-| `--color-text-muted` | `#4B5563` | Ayudas y metadatos. |
-| `--color-border` | `#CBD5E1` | Bordes de controles y divisores. |
-| `--color-border-strong` | `#94A3B8` | Bordes activos o de mayor jerarquía. |
+| `--color-surface-muted` | `#EAF4FC` | Resúmenes y secciones secundarias. |
+| `--color-text` | `#193754` | Texto principal. |
+| `--color-text-muted` | `#53677E` | Ayudas y metadatos. |
+| `--color-border` | `#D6E1EC` | Bordes y divisores. |
+| `--color-control-border` | `#71849A` | Contorno de controles. |
 
 ### Estados semánticos
 
 | Estado | Texto/icono | Fondo suave | Uso previsto |
 |---|---:|---:|---|
-| Aprobado | `#047857` | `#ECFDF5` | Solicitud procesada con estado `APPROVED`. |
-| Rechazado | `#B42318` | `#FEF3F2` | Solicitud procesada con estado `REJECTED`. |
-| Advertencia | `#92400E` | `#FFF7ED` | Conflicto o acción que requiere atención. |
-| Información | `#075985` | `#F0F9FF` | Ayudas y mensajes informativos. |
-| No confirmado | `#5B21B6` | `#F5F3FF` | Resultado pendiente de recuperación o confirmación. |
+| Aprobado | `#176543` | `#E8F5ED` | Solicitud procesada con estado `APPROVED`. |
+| Rechazado | `#9C383F` | `#FCEBED` | Solicitud procesada con estado `REJECTED`. |
+| Advertencia | `#805400` | `#FFF4D4` | Conflicto o acción que requiere atención. |
+| Información | `#075A91` | `#EAF4FC` | Ayudas y mensajes informativos. |
+| No confirmado | `#643287` | `#F3EAFB` | Resultado pendiente de recuperación o confirmación. |
 
 Cada estado debe mostrar un título o etiqueta textual. El color y el icono son refuerzos, no la única forma de comunicar significado.
 
 ## 3. Tipografía
 
-Usar inicialmente una pila de fuentes del sistema para evitar dependencias externas y mejorar el tiempo de carga:
+Usar Montserrat como tipografía de marca, con Arial como fallback:
 
 ```css
-font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-  "Segoe UI", sans-serif;
+font-family: Montserrat, Arial, sans-serif;
 ```
 
-`Inter` solo se utilizará cuando esté disponible localmente; no se descargará desde un tercero en esta etapa.
+La implementación actual solicita Montserrat a Google Fonts desde `index.html`. Un despliegue con política de contenido estricta o funcionamiento sin red debe alojar los archivos tipográficos localmente.
 
 | Nivel | Tamaño sugerido | Peso | Uso |
 |---|---:|---:|---|
@@ -80,22 +79,23 @@ Usar una escala basada en múltiplos de 4 px:
 4, 8, 12, 16, 24, 32, 48, 64 px
 ```
 
-- Ancho máximo sugerido del contenido: `1200px`.
-- Margen lateral: `16px` en móvil, `24px` en tableta y `32px` en escritorio.
-- Separación entre secciones principales: `32px`.
-- Relleno de tarjetas: `16px` en móvil y `24px` en escritorio.
-- El formulario se presenta en una columna en móvil y puede usar dos columnas en pantallas amplias.
-- Resultado y listado reciente pueden compartir una cuadrícula cuando exista espacio suficiente, sin comprimir el formulario.
+- Ancho máximo del contenido: `1200px`.
+- Margen lateral: `10px` en móvil y `16px` desde 640 px.
+- Separación principal: `20–24px`.
+- Relleno de paneles: `16px` en móvil y `20–24px` en escritorio.
+- El formulario usa una columna en móvil y dos en pantallas amplias.
+- El maestro–detalle usa dos columnas hasta `58rem`; después se apila.
+- El inspector permanece sticky únicamente cuando ambos paneles comparten fila.
 
 ## 5. Controles y acciones
 
 - Altura mínima interactiva: `44px`.
-- Radio de borde de controles: `8px`.
-- Radio de borde de tarjetas: `12px`.
+- Radio de borde de controles: `6px`.
+- Radio de borde de paneles: `12px`.
 - Borde normal: `1px solid var(--color-border)`.
 - Foco: contorno visible de al menos `2px`, separado del borde y sin eliminar `outline` sin reemplazo.
 - Botón principal sólido; botón secundario con superficie blanca y borde visible.
-- Acciones destructivas o de descarte deben identificarse con texto explícito.
+- Acciones destructivas o de descarte deben identificarse con texto explícito y pedir confirmación si existe un borrador modificado.
 - Un botón deshabilitado mantiene una etiqueta legible y no debe ser la única señal de que existe una operación en curso.
 
 Los campos usarán controles HTML nativos con etiqueta asociada. La ayuda y el error aparecerán debajo del control, reservando una estructura consistente para evitar saltos visuales innecesarios.
@@ -103,17 +103,12 @@ Los campos usarán controles HTML nativos con etiqueta asociada. La ayuda y el e
 ## 6. Tarjetas, tablas y listas
 
 - Usar tarjetas blancas sobre el fondo general para separar formulario, resultado y consultas.
-- Aplicar sombras discretas únicamente cuando ayuden a distinguir niveles:
-
-```css
-box-shadow: 0 1px 2px rgb(15 23 42 / 0.06),
-  0 4px 12px rgb(15 23 42 / 0.04);
-```
+- Separar niveles mediante borde, superficie y espacio. La implementación no necesita sombras en los paneles principales.
 
 - En pantallas pequeñas, transformar tablas anchas en listas o tarjetas de pares etiqueta–valor.
 - Mantener visibles la referencia, el estado y la fecha de procesamiento en cada solicitud.
 - Alinear importes a la derecha cuando se presenten en columnas.
-- No inventar formato monetario hasta cerrar moneda, precisión y escala con el backend.
+- Presentar COP con agrupación `es-CO`, preservando todos los decimales recibidos. No convertir el string a `Number` ni agregar redondeos visuales.
 
 ## 7. Retroalimentación y movimiento
 
@@ -130,19 +125,21 @@ box-shadow: 0 1px 2px rgb(15 23 42 / 0.06),
 - Los iconos de estado deben acompañarse de texto visible.
 - No añadir una librería de iconos hasta confirmar que sus beneficios justifican la dependencia.
 
-## 9. Aplicación futura de tokens
+## 9. Tokens implementados
 
-La implementación debería declarar los tokens globales una sola vez y consumir nombres semánticos desde los componentes. Ejemplo orientativo:
+Los tokens se declaran una sola vez en `src/styles.scss` y los componentes consumen nombres semánticos:
 
 ```css
 :root {
-  --color-primary: #1d4ed8;
-  --color-primary-hover: #1e40af;
-  --color-background: #f7f9fc;
+  --color-brand-navy: #023365;
+  --color-brand-blue: #0997e6;
+  --color-brand-yellow: #febd04;
+  --color-brand-pink: #fb2f70;
+  --color-background: #f1f5fa;
   --color-surface: #ffffff;
-  --color-text: #172033;
-  --color-text-muted: #4b5563;
-  --color-border: #cbd5e1;
+  --color-text: #193754;
+  --color-text-muted: #53677e;
+  --color-border: #d6e1ec;
 
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -151,12 +148,12 @@ La implementación debería declarar los tokens globales una sola vez y consumir
   --space-6: 1.5rem;
   --space-8: 2rem;
 
-  --radius-control: 0.5rem;
-  --radius-card: 0.75rem;
+  --radius-control: 0.375rem;
+  --radius-panel: 0.75rem;
 }
 ```
 
-Este fragmento es una referencia para la etapa de estilos; no obliga a crear componentes o wrappers adicionales.
+No repetir colores de marca dentro de componentes salvo que una excepción visual esté documentada.
 
 ## 10. Criterios de aceptación visual
 
@@ -169,11 +166,10 @@ Este fragmento es una referencia para la etapa de estilos; no obliga a crear com
 - Resultado aprobado, rechazado, conflicto y no confirmado claramente diferenciados.
 - La fecha y la referencia permanecen visibles junto al resultado correspondiente.
 
-## 11. Fuera de esta propuesta
+## 11. Fuera de alcance
 
-- Logotipo y manual de marca definitivo.
 - Modo oscuro.
 - Ilustraciones y animaciones de marca.
 - Selección de una librería de componentes o iconos.
-- Formato definitivo de moneda.
-- Implementación de estilos en los componentes Angular.
+- Tipografía autoalojada.
+- Persistencia del borrador entre recargas.

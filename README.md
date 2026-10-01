@@ -1,45 +1,56 @@
-# Frontend del sistema de créditos
+# BancoIAS · solicitudes de crédito
 
-Base Angular para registrar solicitudes de crédito, mostrar sus resultados y consultar solicitudes recientes. Los flujos de negocio todavía no están implementados.
+Frontend Angular para registrar solicitudes de crédito, revisar los datos antes de enviarlos, consultar resultados por referencia y explorar las operaciones recientes.
+
+La interfaz aplica la identidad visual de IAS Software y consume el backend mediante rutas relativas `/api`. No contiene datos simulados ni reproduce el JavaScript del archivo visual de referencia.
+
+## Funcionalidad
+
+- Alta con Reactive Forms tipados y validación accesible.
+- Revisión explícita de referencia, cliente, monto y plazo antes del POST.
+- Monto decimal conservado como `string`, sin convertirlo a punto flotante.
+- Estados de envío separados: en curso, resuelto, inválido, conflicto y sin confirmar.
+- Recuperación de respuestas inciertas mediante consulta o reintento del cuerpo exacto.
+- Consulta por referencia y listado de las últimas 20 solicitudes.
+- Borrador conservado al alternar entre alta y consulta durante la sesión.
+- Presentación adaptable maestro–detalle, navegación por teclado y movimiento reducido.
 
 ## Requisitos
 
 - Node.js 24 LTS (`24.21.0` recomendado).
 - npm 11.
+- Backend disponible en `http://localhost:8080` para usar los flujos reales.
 
-## Instalación
+## Instalación y desarrollo
 
 ```bash
 npm install
-```
-
-## Desarrollo
-
-```bash
 npm start
 ```
 
-La aplicación estará disponible en `http://localhost:4200/`.
+La aplicación queda disponible en `http://localhost:4200/`. `proxy.conf.cjs` reenvía `/api/*` al backend local y elimina el prefijo `/api`.
 
 ## Verificaciones
 
 ```bash
+npm run format:check
 npm run build
 npm test -- --watch=false
-npm run format:check
 ```
+
+Las pruebas cubren validadores, contrato HTTP, parser defensivo, store, doble envío, revisión previa, recuperación, foco y preservación del borrador.
 
 ## Documentación
 
 - [Arquitectura del frontend](ARQUITECTURA_FRONTEND.md)
-- [Contexto de implementación](CONTEXTO_IA_FRONTEND.md)
-- [Guía visual propuesta](GUIA_VISUAL.md)
+- [Contexto para continuar con IA](CONTEXTO_IA_FRONTEND.md)
+- [Contrato de integración](CONTRATO_API.md)
+- [Guía visual implementada](GUIA_VISUAL.md)
+- [Uso de IA y referencias de diseño](USO_IA.md)
 
-## Base técnica
+## Límites conocidos
 
-- Angular standalone.
-- TypeScript y plantillas estrictas.
-- Routing habilitado.
-- SCSS.
-- Vitest para pruebas unitarias.
-- npm con archivo de bloqueo.
+- El borrador vive en memoria: recargar la pestaña lo elimina.
+- No hay autenticación ni autorización; el alcance es una demostración local.
+- La disponibilidad, persistencia e idempotencia entre clientes pertenecen al backend.
+- `bancoias-identidad-ias.html` es únicamente una referencia visual local y no forma parte del bundle Angular.
