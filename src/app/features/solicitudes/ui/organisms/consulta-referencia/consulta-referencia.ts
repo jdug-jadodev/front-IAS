@@ -24,7 +24,9 @@ export class ConsultaReferencia {
   protected consultar(): void {
     this.referencia.markAsTouched();
     if (this.referencia.invalid) {
-      queueMicrotask(() => this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus());
+      queueMicrotask(() =>
+        this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus(),
+      );
       return;
     }
     this.store.consultarPorReferencia(this.referencia.value);
