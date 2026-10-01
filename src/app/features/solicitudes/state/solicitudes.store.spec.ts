@@ -9,19 +9,28 @@ import { SolicitudesStore } from './solicitudes.store';
 describe('SolicitudesStore', () => {
   const url = '/api/applications';
   const datos = {
-    applicationReference: 'Ref / ñ',
     customerId: 'c',
     amount: '1.00',
     termMonths: 12,
   };
   const resultado = {
     ...datos,
+    applicationReference: 'REF-001',
     status: 'APPROVED' as const,
     message: 'Esta solicitud fue aprobada',
     processedAt: '2026-10-01T10:00:00Z',
     reasonCode: null,
     reason: null,
   };
+  const pagina = (content: unknown[], page = 0, totalElements = content.length) => ({
+    content,
+    page,
+    size: 20,
+    totalElements,
+    totalPages: Math.ceil(totalElements / 20),
+    first: page === 0,
+    last: page >= Math.ceil(totalElements / 20) - 1,
+  });
   let store: SolicitudesStore;
   let http: HttpTestingController;
 
@@ -44,43 +53,66 @@ describe('SolicitudesStore', () => {
     expect(store.edicionBloqueada()).toBe(true);
     const req = http.expectOne(url);
     expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual(datos);
+    expect(req.request.headers.get('Idempotency-Key')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
     req.flush(resultado, { status: 201, statusText: 'Created' });
-    http.expectOne(`${url}?limit=20`).flush([]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
     expect(store.envio().tipo).toBe('resolved');
     store.enviar(datos);
     http.expectNone(url);
   });
 
-  it('conserva el cuerpo original y excluye recuperaciones simultáneas', () => {
-    const borrador = { ...datos };
-    store.enviar(borrador);
-    borrador.amount = '999';
-    http.expectOne(url).error(new ProgressEvent('error'));
-    store.nuevaSolicitud();
+  it('reintenta con la misma clave y los mismos tres datos tras perder la respuesta', () => {
+    store.enviar(datos);
+    const primero = http.expectOne(url);
+    const clave = primero.request.headers.get('Idempotency-Key');
+    primero.error(new ProgressEvent('error'));
     expect(store.envio().tipo).toBe('unconfirmed');
+
     store.reintentarEnvio();
     store.reintentarEnvio();
-    store.consultarEnvioPendiente();
-    const req = http.expectOne(url);
-    expect(req.request.body).toEqual(datos);
-    expect(store.recuperando()).toBe(true);
-    req.flush(resultado);
-    http.expectOne(`${url}?limit=20`).flush([]);
+    const reintento = http.expectOne(url);
+    expect(reintento.request.headers.get('Idempotency-Key')).toBe(clave);
+    expect(reintento.request.body).toEqual(datos);
+    reintento.flush(resultado, { status: 200, statusText: 'OK' });
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
     expect(store.envio().tipo).toBe('resolved');
   });
 
-  it('recupera por referencia y un fallo del listado no altera el resultado', () => {
+  it('conserva la clave al reintentar después de un 429', () => {
     store.enviar(datos);
-    http.expectOne(url).flush({}, { status: 503, statusText: 'Unavailable' });
-    store.consultarEnvioPendiente();
+    const primero = http.expectOne(url);
+    const clave = primero.request.headers.get('Idempotency-Key');
+    primero.flush(
+      { code: 'RATE_LIMIT_EXCEEDED', message: 'Espera antes de reintentar' },
+      { status: 429, statusText: 'Too Many Requests' },
+    );
+    expect(store.envio().tipo).toBe('unconfirmed');
     store.reintentarEnvio();
-    const req = http.expectOne(`${url}/${encodeURIComponent(datos.applicationReference)}`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ ...resultado, amount: '1' });
-    http.expectOne(`${url}?limit=20`).flush({}, { status: 500, statusText: 'Error' });
-    expect(store.envio().tipo).toBe('resolved');
-    expect(store.recientes().error).not.toBeNull();
-    http.expectNone((request) => request.method === 'POST');
+    const reintento = http.expectOne(url);
+    expect(reintento.request.headers.get('Idempotency-Key')).toBe(clave);
+    reintento.flush(resultado, { status: 201, statusText: 'Created' });
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
+  });
+
+  it('genera otra clave para una solicitud nueva aunque los datos sean iguales', () => {
+    store.enviar(datos);
+    const primera = http.expectOne(url);
+    const claveInicial = primera.request.headers.get('Idempotency-Key');
+    primera.flush(resultado, { status: 201, statusText: 'Created' });
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([resultado]));
+
+    store.nuevaSolicitud();
+    store.enviar(datos);
+    const segunda = http.expectOne(url);
+    expect(segunda.request.headers.get('Idempotency-Key')).not.toBe(claveInicial);
+    segunda.flush(
+      { ...resultado, applicationReference: 'REF-002' },
+      { status: 201, statusText: 'Created' },
+    );
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
   });
 
   it('permite corregir después de un 400', () => {
@@ -106,7 +138,7 @@ describe('SolicitudesStore', () => {
     const req = http.expectOne(url);
     expect(req.request.body.termMonths).toBe(24);
     req.flush({ ...resultado, termMonths: 24 });
-    http.expectOne(`${url}?limit=20`).flush([]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
   });
 
   it.each([
@@ -125,70 +157,11 @@ describe('SolicitudesStore', () => {
     expect(store.edicionBloqueada()).toBe(false);
   });
 
-  it('exige una referencia diferente tras un conflicto', () => {
-    store.enviar(datos);
-    http.expectOne(url).flush(
-      {
-        code: 'REFERENCE_CONFLICT',
-        message: 'La referencia ya está asociada a una solicitud con datos diferentes',
-        traceId: 'trace-409',
-      },
-      { status: 409, statusText: 'Conflict' },
-    );
-    expect(store.envio().tipo).toBe('conflict');
-    expect(store.envio()).toMatchObject({
-      error: { code: 'REFERENCE_CONFLICT', traceId: 'trace-409' },
-    });
-    store.nuevaSolicitud();
-    store.enviar(datos);
-    http.expectNone(url);
-    store.enviar({ ...datos, applicationReference: 'otra' });
-    http.expectOne(url).flush({ ...resultado, applicationReference: 'otra' });
-    http.expectOne(`${url}?limit=20`).flush([]);
-  });
-
-  it('un 404 durante la recuperación conserva la operación pendiente', () => {
-    store.enviar(datos);
-    http.expectOne(url).error(new ProgressEvent('error'));
-    store.consultarEnvioPendiente();
-    http
-      .expectOne(`${url}/${encodeURIComponent(datos.applicationReference)}`)
-      .flush({}, { status: 404, statusText: 'Not Found' });
-    expect(store.envio().tipo).toBe('unconfirmed');
-    expect(store.recuperando()).toBe(false);
-    expect(store.edicionBloqueada()).toBe(true);
-    store.reintentarEnvio();
-    const req = http.expectOne(url);
-    expect(req.request.body).toEqual(datos);
-    req.flush(resultado);
-    http.expectOne(`${url}?limit=20`).flush([]);
-  });
-
-  it('recuperar datos distintos produce conflicto', () => {
-    store.enviar(datos);
-    http.expectOne(url).error(new ProgressEvent('error'));
-    store.consultarEnvioPendiente();
-    http
-      .expectOne(`${url}/${encodeURIComponent(datos.applicationReference)}`)
-      .flush({ ...resultado, customerId: 'otro-cliente' });
-    expect(store.envio().tipo).toBe('conflict');
-  });
-
-  it.each([{}, { ...resultado, customerId: 'otro' }])(
-    'no confirma un POST con respuesta incompatible',
-    (body) => {
-      store.enviar(datos);
-      http.expectOne(url).flush(body);
-      expect(store.envio().tipo).toBe('unconfirmed');
-      http.expectNone(`${url}?limit=20`);
-    },
-  );
-
   it('una consulta manual no resuelve ni desbloquea el envío pendiente', () => {
     store.enviar(datos);
     http.expectOne(url).error(new ProgressEvent('error'));
-    store.consultarPorReferencia(datos.applicationReference);
-    http.expectOne(`${url}/${encodeURIComponent(datos.applicationReference)}`).flush(resultado);
+    store.consultarPorReferencia(resultado.applicationReference);
+    http.expectOne(`${url}/${encodeURIComponent(resultado.applicationReference)}`).flush(resultado);
     expect(store.consulta().datos?.status).toBe('APPROVED');
     expect(store.envio().tipo).toBe('unconfirmed');
     expect(store.edicionBloqueada()).toBe(true);
@@ -196,32 +169,51 @@ describe('SolicitudesStore', () => {
 
   it('conserva las últimas solicitudes cuando falla su actualización', () => {
     store.cargarRecientes();
-    http.expectOne(`${url}?limit=20`).flush([resultado]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([resultado]));
     store.cargarRecientes();
-    http.expectOne(`${url}?limit=20`).flush({}, { status: 500, statusText: 'Error' });
+    http.expectOne(`${url}?page=0&size=20`).flush({}, { status: 500, statusText: 'Error' });
     expect(store.recientes().datos).toHaveLength(1);
     expect(store.recientes().error).not.toBeNull();
   });
 
+  it('avanza y retrocede conservando el tamaño de 20 y los totales del servidor', () => {
+    store.cargarRecientes();
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([resultado], 0, 21));
+    expect(store.paginaRecientes()?.totalElements).toBe(21);
+
+    store.cambiarPaginaRecientes(1);
+    http
+      .expectOne(`${url}?page=1&size=20`)
+      .flush(pagina([{ ...resultado, applicationReference: 'ANTERIOR' }], 1, 21));
+    expect(store.paginaRecientes()?.page).toBe(1);
+    expect(store.recientes().datos[0].applicationReference).toBe('ANTERIOR');
+
+    store.cambiarPaginaRecientes(2);
+    http.expectNone(`${url}?page=2&size=20`);
+    store.cambiarPaginaRecientes(0);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([resultado], 0, 21));
+    expect(store.recientes().datos[0].applicationReference).toBe(resultado.applicationReference);
+  });
+
   it('inserta un 201 confirmado antes de refrescar y lo conserva si el GET falla', () => {
     const nueva = { ...resultado, applicationReference: 'REF-NUEVA' };
-    store.enviar({ ...datos, applicationReference: nueva.applicationReference });
+    store.enviar(datos);
     http.expectOne(url).flush(nueva, { status: 201, statusText: 'Created' });
 
     expect(store.recientes().datos).toEqual([nueva]);
-    http.expectOne(`${url}?limit=20`).flush({}, { status: 500, statusText: 'Error' });
+    http.expectOne(`${url}?page=0&size=20`).flush({}, { status: 500, statusText: 'Error' });
     expect(store.recientes().datos).toEqual([nueva]);
   });
 
   it('reemplaza un reintento HTTP 200 por referencia sin duplicarlo', () => {
     store.cargarRecientes();
-    http.expectOne(`${url}?limit=20`).flush([resultado]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([resultado]));
     store.enviar(datos);
     const reiterada = { ...resultado, message: 'Esta solicitud ya fue aprobada' };
     http.expectOne(url).flush(reiterada, { status: 200, statusText: 'OK' });
 
     expect(store.recientes().datos).toEqual([reiterada]);
-    http.expectOne(`${url}?limit=20`).flush([reiterada]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([reiterada]));
     expect(store.recientes().datos).toHaveLength(1);
   });
 
@@ -233,10 +225,10 @@ describe('SolicitudesStore', () => {
     http.expectOne(`${url}/nueva`).flush({ ...resultado, applicationReference: 'nueva' });
     expect(store.consulta().datos?.applicationReference).toBe('nueva');
     store.cargarRecientes();
-    const listadoAnterior = http.expectOne(`${url}?limit=20`);
+    const listadoAnterior = http.expectOne(`${url}?page=0&size=20`);
     store.cargarRecientes();
     expect(listadoAnterior.cancelled).toBe(true);
-    http.expectOne(`${url}?limit=20`).flush([]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
   });
 
   it('selecciona un resultado reciente sin hacer otro GET ni alterar el envío', () => {
@@ -245,23 +237,6 @@ describe('SolicitudesStore', () => {
     expect(store.consulta().datos).toEqual(resultado);
     expect(store.envio().tipo).toBe('idle');
     http.expectNone((request) => request.method === 'GET');
-  });
-
-  it('recuerda las referencias conflictivas de la sesión y limpia el aviso visible', () => {
-    store.enviar(datos);
-    http.expectOne(url).flush({}, { status: 409, statusText: 'Conflict' });
-    store.nuevaSolicitud();
-    expect(store.referenciaEnConflicto()).toBeNull();
-
-    const segunda = { ...datos, applicationReference: 'otra-conflictiva' };
-    store.enviar(segunda);
-    http.expectOne(url).flush({}, { status: 409, statusText: 'Conflict' });
-    store.nuevaSolicitud();
-    store.enviar(datos);
-
-    http.expectNone(url);
-    expect(store.envio().tipo).toBe('invalid');
-    expect(store.referenciaEnConflicto()).toBe(datos.applicationReference);
   });
 
   it('el timeout deja el envío sin confirmar y no reintenta automáticamente', () => {
@@ -280,7 +255,7 @@ describe('SolicitudesStore', () => {
     vi.spyOn(TestBed.inject(SolicitudesApiService), 'enviar').mockReturnValue(respuesta);
     store.enviar(datos);
     respuesta.next({ httpStatus: 201, solicitud: resultado });
-    http.expectOne(`${url}?limit=20`).flush([]);
+    http.expectOne(`${url}?page=0&size=20`).flush(pagina([]));
     respuesta.error(new Error('Error tardío'));
     expect(store.envio().tipo).toBe('resolved');
   });

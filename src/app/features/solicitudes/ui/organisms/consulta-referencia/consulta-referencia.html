@@ -7,20 +7,21 @@
     autocomplete="off"
   >
     <app-campo
-      controlId="consulta"
+      controlId="referencia-consulta"
       etiqueta="Consultar por referencia"
       [error]="referencia.touched && referencia.invalid ? 'Escribe una referencia.' : ''"
     >
       <input
-        id="consulta"
+        id="referencia-consulta"
         name="reference"
         type="text"
+        appMayusculas
         formControlName="referencia"
         placeholder="Ej. REF-001"
         autocomplete="off"
         spellcheck="false"
         required
-        aria-describedby="consulta-error"
+        aria-describedby="referencia-consulta-error"
         [attr.aria-invalid]="referencia.touched && referencia.invalid"
       />
     </app-campo>

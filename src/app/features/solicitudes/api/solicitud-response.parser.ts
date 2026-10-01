@@ -1,4 +1,8 @@
-import { CodigoMotivoRechazo, SolicitudResultado } from '../models/solicitud.model';
+import {
+  CodigoMotivoRechazo,
+  PaginaSolicitudes,
+  SolicitudResultado,
+} from '../models/solicitud.model';
 import { decimalCanonico } from '../validation/solicitud-form.validators';
 
 const CODIGOS_RECHAZO = new Set<CodigoMotivoRechazo>([
@@ -77,7 +81,34 @@ export function parseSolicitud(value: unknown): SolicitudResultado {
   throw new RespuestaIncompatible();
 }
 
-export function parseSolicitudes(value: unknown): readonly SolicitudResultado[] {
-  if (!Array.isArray(value)) throw new RespuestaIncompatible();
-  return value.map(parseSolicitud);
+export function parseSolicitudes(value: unknown): PaginaSolicitudes {
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    throw new RespuestaIncompatible();
+  const data = value as Record<string, unknown>;
+  const { content, page, size, totalElements, totalPages, first, last } = data;
+  if (
+    !Array.isArray(content) ||
+    !Number.isInteger(page) ||
+    (page as number) < 0 ||
+    !Number.isInteger(size) ||
+    (size as number) < 1 ||
+    (size as number) > 20 ||
+    !Number.isInteger(totalElements) ||
+    (totalElements as number) < 0 ||
+    !Number.isInteger(totalPages) ||
+    (totalPages as number) < 0 ||
+    typeof first !== 'boolean' ||
+    typeof last !== 'boolean' ||
+    content.length > (size as number)
+  )
+    throw new RespuestaIncompatible();
+  return {
+    content: content.map(parseSolicitud),
+    page: page as number,
+    size: size as number,
+    totalElements: totalElements as number,
+    totalPages: totalPages as number,
+    first,
+    last,
+  };
 }

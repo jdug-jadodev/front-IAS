@@ -14,10 +14,4 @@ import { ResultadoDetalle } from './resultado-detalle';
 export class SolicitudResultado {
   protected readonly store = inject(SolicitudesStore);
   readonly nuevaSolicitudSolicitada = output<void>();
-  readonly consultaSolicitada = output<void>();
-
-  protected consultarOriginal(referencia: string): void {
-    this.store.consultarPorReferencia(referencia);
-    this.consultaSolicitada.emit();
-  }
 }

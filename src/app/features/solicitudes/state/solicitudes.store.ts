@@ -3,11 +3,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { mapErrorApi } from '../api/error-api.mapper';
 import { RespuestaIncompatible } from '../api/solicitud-response.parser';
-import { SolicitudesApiService } from '../api/solicitudes-api.service';
+import { SOLICITUDES_POR_PAGINA, SolicitudesApiService } from '../api/solicitudes-api.service';
 import {
   EnvioEstado,
   ErrorUi,
   LecturaEstado,
+  PaginaSolicitudes,
   SolicitudEntrada,
   SolicitudResultado,
 } from '../models/solicitud.model';
@@ -23,25 +24,25 @@ export class SolicitudesStore {
     cargando: false,
     error: null,
   });
+  private readonly _paginaRecientes = signal<PaginaSolicitudes | null>(null);
   private readonly _consulta = signal<LecturaEstado<SolicitudResultado | null>>({
     datos: null,
     cargando: false,
     error: null,
   });
   private readonly _revision = signal(0);
-  private readonly _referenciaEnConflicto = signal<string | null>(null);
+  private claveEnvio: string | null = null;
   private operacion = 0;
   private lecturaRecientes = 0;
   private lecturaConsulta = 0;
   private peticionRecientes?: Subscription;
   private peticionConsulta?: Subscription;
-  private readonly referenciasEnConflicto = new Set<string>();
 
   readonly envio = this._envio.asReadonly();
   readonly recientes = this._recientes.asReadonly();
+  readonly paginaRecientes = this._paginaRecientes.asReadonly();
   readonly consulta = this._consulta.asReadonly();
   readonly revisionFormulario = this._revision.asReadonly();
-  readonly referenciaEnConflicto = this._referenciaEnConflicto.asReadonly();
   readonly edicionBloqueada = computed(() => !['idle', 'invalid'].includes(this.envio().tipo));
   readonly recuperando = computed(() => {
     const estado = this.envio();
@@ -51,21 +52,11 @@ export class SolicitudesStore {
   enviar(entrada: SolicitudEntrada): void {
     if (this.edicionBloqueada()) return;
     const datos = Object.freeze({
-      applicationReference: entrada.applicationReference,
       customerId: entrada.customerId,
       amount: entrada.amount,
       termMonths: entrada.termMonths,
     });
-    if (this.referenciasEnConflicto.has(datos.applicationReference)) {
-      this._referenciaEnConflicto.set(datos.applicationReference);
-      this._envio.set({
-        tipo: 'invalid',
-        datos,
-        error: { message: 'Utiliza otra referencia para una nueva solicitud.' },
-      });
-      return;
-    }
-    this._referenciaEnConflicto.set(null);
+    this.claveEnvio = crypto.randomUUID();
     this._envio.set({ tipo: 'submitting', datos });
     this.ejecutarPost(datos);
   }
@@ -77,53 +68,31 @@ export class SolicitudesStore {
     this.ejecutarPost(estado.datos);
   }
 
-  consultarEnvioPendiente(): void {
-    const estado = this.envio();
-    if (estado.tipo !== 'unconfirmed' || estado.recuperacion !== null) return;
-    const id = ++this.operacion;
-    this._envio.set({ ...estado, recuperacion: 'consulta' });
-    this.api
-      .consultar(estado.datos.applicationReference)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (resultado) => {
-          if (!this.vigente(id)) return;
-          if (mismosDatos(estado.datos, resultado)) this.confirmar(estado.datos, resultado, false);
-          else
-            this.conflicto(estado.datos, {
-              message: 'La referencia corresponde a una solicitud con otros datos.',
-            });
-        },
-        error: (error: unknown) => {
-          if (!this.vigente(id)) return;
-          const detalle = mapErrorApi(error);
-          this._envio.set({
-            ...estado,
-            recuperacion: null,
-            error:
-              detalle.status === 404
-                ? {
-                    ...detalle,
-                    message:
-                      'Aún no se encontró la solicitud. Esto no confirma que el envío haya terminado; puedes reintentar el mismo envío.',
-                  }
-                : detalle,
-          });
-        },
-      });
-  }
-
-  cargarRecientes(): void {
+  cargarRecientes(page = this._paginaRecientes()?.page ?? 0): void {
+    if (!Number.isSafeInteger(page) || page < 0) return;
     const id = ++this.lecturaRecientes;
     this.peticionRecientes?.unsubscribe();
     this._recientes.update((estado) => ({ ...estado, cargando: true, error: null }));
     this.peticionRecientes = this.api
-      .recientes()
+      .recientes(page)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (datos) => {
-          if (id === this.lecturaRecientes)
-            this._recientes.set({ datos, cargando: false, error: null });
+        next: (pagina) => {
+          if (id !== this.lecturaRecientes) return;
+          if (pagina.page !== page) {
+            this._recientes.update((estado) => ({
+              ...estado,
+              cargando: false,
+              error: mapErrorApi(new RespuestaIncompatible()),
+            }));
+            return;
+          }
+          if (page > 0 && page >= pagina.totalPages) {
+            this.cargarRecientes(Math.max(0, pagina.totalPages - 1));
+            return;
+          }
+          this._paginaRecientes.set(pagina);
+          this._recientes.set({ datos: pagina.content, cargando: false, error: null });
         },
         error: (error: unknown) => {
           if (id === this.lecturaRecientes)
@@ -134,6 +103,12 @@ export class SolicitudesStore {
             }));
         },
       });
+  }
+
+  cambiarPaginaRecientes(page: number): void {
+    const pagina = this._paginaRecientes();
+    if (!pagina || this._recientes().cargando || page < 0 || page >= pagina.totalPages) return;
+    if (page !== pagina.page) this.cargarRecientes(page);
   }
 
   consultarPorReferencia(referencia: string): void {
@@ -177,14 +152,14 @@ export class SolicitudesStore {
     if (this.envio().tipo === 'submitting' || this.envio().tipo === 'unconfirmed') return;
     ++this.operacion;
     this._envio.set({ tipo: 'idle' });
-    this._referenciaEnConflicto.set(null);
+    this.claveEnvio = null;
     this._revision.update((revision) => revision + 1);
   }
 
   private ejecutarPost(datos: SolicitudEntrada): void {
     const id = ++this.operacion;
     this.api
-      .enviar(datos)
+      .enviar(datos, this.claveEnvio!)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (respuesta) => {
@@ -209,9 +184,10 @@ export class SolicitudesStore {
     resultado: SolicitudResultado,
     solicitudNueva: boolean,
   ): void {
-    this._referenciaEnConflicto.set(null);
+    this.claveEnvio = null;
     this._envio.set({ tipo: 'resolved', datos, resultado });
     this._recientes.update((estado) => {
+      if (this._paginaRecientes()?.page !== 0 && this._paginaRecientes() !== null) return estado;
       const indice = estado.datos.findIndex(
         (solicitud) => solicitud.applicationReference === resultado.applicationReference,
       );
@@ -224,25 +200,26 @@ export class SolicitudesStore {
             ...estado.datos.filter(
               (solicitud) => solicitud.applicationReference !== resultado.applicationReference,
             ),
-          ].slice(0, 20),
+          ].slice(0, this._paginaRecientes()?.size ?? SOLICITUDES_POR_PAGINA),
         };
       }
       const actualizados = [...estado.datos];
       actualizados[indice] = resultado;
       return { ...estado, datos: actualizados };
     });
-    this.cargarRecientes();
+    this.cargarRecientes(0);
   }
 
   private conflicto(datos: SolicitudEntrada, error: ErrorUi): void {
-    this.referenciasEnConflicto.add(datos.applicationReference);
-    this._referenciaEnConflicto.set(datos.applicationReference);
+    this.claveEnvio = null;
     this._envio.set({ tipo: 'conflict', datos, error });
   }
 
   private errorEnvio(datos: SolicitudEntrada, error: unknown): void {
     const detalle = mapErrorApi(error);
     if (detalle.status === 409) this.conflicto(datos, detalle);
+    else if (detalle.status === 429)
+      this._envio.set({ tipo: 'unconfirmed', datos, error: detalle, recuperacion: null });
     else if (detalle.status && detalle.status >= 400 && detalle.status < 500)
       this._envio.set({ tipo: 'invalid', datos, error: detalle });
     else this._envio.set({ tipo: 'unconfirmed', datos, error: detalle, recuperacion: null });

@@ -39,9 +39,9 @@ describe('Validación de solicitudes', () => {
   });
 
   it('compara decimales sin perder precisión ni modificar identificadores', () => {
-    const datos = { applicationReference: 'r', customerId: 'c', amount: '0001.00', termMonths: 12 };
+    const datos = { customerId: 'c', amount: '0001.00', termMonths: 12 };
     expect(mismosDatos(datos, { ...datos, amount: '1' })).toBe(true);
-    expect(mismosDatos(datos, { ...datos, applicationReference: 'R' })).toBe(false);
+    expect(mismosDatos(datos, { ...datos, customerId: 'otro' })).toBe(false);
     expect(decimalCanonico('9007199254740993.00100')).toBe('9007199254740993.001');
     expect(
       mismosDatos(

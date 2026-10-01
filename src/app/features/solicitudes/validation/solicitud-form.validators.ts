@@ -26,7 +26,6 @@ export const plazoValido: ValidatorFn = ({ value }) =>
 export function mismosDatos(a: SolicitudEntrada, b: SolicitudEntrada): boolean {
   const monto = decimalCanonico(a.amount);
   return (
-    a.applicationReference === b.applicationReference &&
     a.customerId === b.customerId &&
     monto !== null &&
     monto === decimalCanonico(b.amount) &&

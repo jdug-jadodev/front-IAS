@@ -1,71 +1,164 @@
-<section class="masthead" aria-labelledby="titulo-pagina">
-  <div class="contenedor masthead-contenido">
-    <div>
-      <h1 id="titulo-pagina">Solicitudes de crédito</h1>
-      <p>Cada decisión, con su información a la mano.</p>
+<section
+  id="solicitud"
+  class="hero pantalla-flujo"
+  aria-labelledby="titulo-pagina"
+  [hidden]="vistaInspector() !== 'formulario'"
+>
+  <div class="contenedor hero-contenido" (focusin)="cambiarEscenaDesdeFoco($event)">
+    <div class="historia">
+      <div class="historia-texto">
+        <p class="sobretitulo">Crédito pensado para ti</p>
+        <h1 id="titulo-pagina">Tu próximo<br />gran comienzo.</h1>
+        <p class="bajada">Eso que necesitas para ir por más.</p>
+        <button
+          type="button"
+          class="accion-hero"
+          [disabled]="accionPrincipalBloqueada()"
+          (click)="prepararSolicitud()"
+        >
+          {{ etiquetaAccionPrincipal() }}
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
+      <div class="escena" aria-hidden="true">
+        @for (ilustracion of ilustraciones; track ilustracion.escena) {
+          <img
+            #imagenEscena
+            class="escena-imagen"
+            [class.escena-imagen--activa]="escenaVisible() === ilustracion.escena"
+            [attr.data-escena]="ilustracion.escena"
+            [src]="ilustracion.src"
+            width="1448"
+            height="1086"
+            alt=""
+            decoding="async"
+            draggable="false"
+          />
+        }
+      </div>
     </div>
-    <button
-      type="button"
-      class="boton-primario accion-masthead"
-      [disabled]="accionPrincipalBloqueada()"
-      (click)="prepararSolicitud()"
-    >
-      {{ etiquetaAccionPrincipal() }}
-    </button>
+
+    <section class="tarjeta-solicitud" aria-labelledby="titulo-formulario">
+      <div class="encabezado-inspector">
+        <div>
+          <p class="paso-contextual">Solicitud de crédito</p>
+          <h2 id="titulo-formulario" tabindex="-1">Solicita tu crédito</h2>
+        </div>
+      </div>
+
+      <div class="contenido-inspector">
+        <app-solicitud-form />
+      </div>
+    </section>
   </div>
 </section>
 
-<div class="superficie-trabajo">
-  <div class="contenedor cuadricula-trabajo">
+@let envio = store.envio();
+<section
+  id="comprobante"
+  class="pantalla-flujo pantalla-comprobante"
+  aria-labelledby="titulo-comprobante"
+  [attr.aria-busy]="envio.tipo === 'submitting'"
+  [hidden]="vistaInspector() !== 'envio'"
+>
+  <div class="contenedor comprobante-contenido">
+    <header class="encabezado-pantalla comprobante-presentacion">
+      <div>
+        <p class="sobretitulo">Comprobante digital</p>
+        <h1 id="titulo-comprobante" tabindex="-1">Resultado de tu solicitud</h1>
+        <p class="texto-secundario">
+          Conservamos el resultado y los datos exactos de la operación en un solo lugar.
+        </p>
+      </div>
+      <button type="button" class="boton-texto" (click)="mostrarConsulta()">
+        Consultar solicitud
+      </button>
+    </header>
+
+    <article class="comprobante-tarjeta" aria-label="Comprobante de solicitud de crédito">
+      <div class="marca-comprobante" aria-hidden="true">
+        <span>Banco<strong>IAS</strong></span>
+        <span>COMPROBANTE</span>
+      </div>
+      <app-solicitud-resultado (nuevaSolicitudSolicitada)="prepararSolicitud()" />
+      <p class="pie-comprobante">Documento informativo de la operación registrada en BancoIAS.</p>
+    </article>
+  </div>
+</section>
+
+<section
+  id="consulta"
+  class="pantalla-flujo seguimiento"
+  aria-labelledby="titulo-consulta"
+  [hidden]="vistaInspector() !== 'consulta'"
+>
+  <div class="contenedor seguimiento-contenido">
+    <header class="encabezado-pantalla encabezado-consulta">
+      <div>
+        <p class="sobretitulo">Seguimiento</p>
+        <h1 id="titulo-consulta" tabindex="-1">Consulta tus solicitudes.</h1>
+        <p class="texto-secundario">
+          Busca una referencia o selecciona un registro reciente. Tu borrador permanece intacto.
+        </p>
+      </div>
+      <button type="button" class="boton-texto" (click)="volverAlFlujoPrincipal()">Volver</button>
+    </header>
+
+    <div class="consulta-layout">
+      <section class="panel consulta-buscador" aria-labelledby="titulo-busqueda">
+        <div class="encabezado-tarjeta">
+          <p class="paso-contextual">Buscar solicitud</p>
+          <h2 id="titulo-busqueda">Ingresa la referencia</h2>
+        </div>
+        <app-consulta-referencia (consultaSolicitada)="mostrarConsulta()" />
+      </section>
+
+      <section class="panel consulta-detalle" aria-labelledby="titulo-detalle-consulta">
+        <div class="encabezado-tarjeta">
+          <p class="paso-contextual">Información encontrada</p>
+          <h2 id="titulo-detalle-consulta">Detalle de la solicitud</h2>
+        </div>
+        <div class="contenido-consulta">
+          <app-consulta-resultado />
+        </div>
+      </section>
+    </div>
+
     @let recientes = store.recientes();
     <section
+      id="recientes"
       class="panel panel-solicitudes"
       aria-labelledby="titulo-recientes"
       [attr.aria-busy]="recientes.cargando"
     >
       <div class="encabezado-listado">
-        <h2 id="titulo-recientes">Solicitudes recientes</h2>
+        <div>
+          <p class="paso-contextual">Historial reciente</p>
+          <h2 id="titulo-recientes" tabindex="-1">Solicitudes recientes</h2>
+        </div>
         <button
           type="button"
           class="contador"
           title="Actualizar solicitudes"
           [disabled]="recientes.cargando"
-          [attr.aria-label]="recientes.datos.length + ' solicitudes cargadas. Actualizar listado'"
+          [attr.aria-label]="
+            (store.paginaRecientes()?.totalElements ?? 0) +
+            ' solicitudes en el historial. Actualizar listado'
+          "
           (click)="store.cargarRecientes()"
         >
-          {{ recientes.datos.length }}
+          <span>{{ store.paginaRecientes()?.totalElements ?? 0 }}</span>
+          <span aria-hidden="true">↻</span>
         </button>
       </div>
 
-      <app-consulta-referencia (consultaSolicitada)="mostrarConsulta()" />
       <app-solicitudes-recientes (solicitudSeleccionada)="mostrarSolicitud($event)" />
     </section>
-
-    <section class="panel panel-inspector" [attr.aria-labelledby]="'titulo-inspector'">
-      <div class="encabezado-inspector">
-        <h2 id="titulo-inspector" tabindex="-1">{{ tituloInspector() }}</h2>
-        @if (
-          vistaInspector() === 'consulta' && (formularioIniciado() || store.envio().tipo !== 'idle')
-        ) {
-          <button type="button" class="boton-texto" (click)="volverAlFlujoPrincipal()">
-            {{ etiquetaRetorno() }}
-          </button>
-        }
-      </div>
-      <div class="contenido-inspector">
-        <app-solicitud-form [hidden]="vistaInspector() !== 'formulario'" />
-        <app-solicitud-resultado
-          [hidden]="vistaInspector() !== 'envio'"
-          (nuevaSolicitudSolicitada)="prepararSolicitud()"
-          (consultaSolicitada)="mostrarConsulta()"
-        />
-        <app-consulta-resultado [hidden]="vistaInspector() !== 'consulta'" />
-      </div>
-    </section>
   </div>
+</section>
 
-  <footer class="contenedor pie-pagina">
-    <span>Prueba técnica BancoIAS</span>
-    <span>Tu borrador se conserva durante esta sesión</span>
-  </footer>
-</div>
+<footer class="contenedor pie-pagina">
+  <span>BancoIAS · Solicitudes de crédito</span>
+  <span>Tu borrador se conserva durante esta sesión</span>
+</footer>

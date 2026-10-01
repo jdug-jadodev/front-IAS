@@ -84,8 +84,26 @@ describe('Parser de respuestas', () => {
   });
 
   it('un listado incompatible es un error y no una lista vacía exitosa', () => {
-    expect(parseSolicitudes([])).toEqual([]);
+    const vacia = {
+      content: [],
+      page: 0,
+      size: 20,
+      totalElements: 0,
+      totalPages: 0,
+      first: true,
+      last: true,
+    };
+    expect(parseSolicitudes(vacia)).toEqual(vacia);
+    const cinco = { ...vacia, content: [base], size: 5, totalElements: 1, totalPages: 1 };
+    expect(parseSolicitudes(cinco)).toEqual(cinco);
+    expect(() => parseSolicitudes({ ...cinco, content: Array(6).fill(base) })).toThrow(
+      RespuestaIncompatible,
+    );
+    expect(() => parseSolicitudes([])).toThrow(RespuestaIncompatible);
     expect(() => parseSolicitudes({ content: [] })).toThrow(RespuestaIncompatible);
-    expect(() => parseSolicitudes([base, {}])).toThrow(RespuestaIncompatible);
+    expect(() => parseSolicitudes({ ...vacia, content: [base, {}] })).toThrow(
+      RespuestaIncompatible,
+    );
+    expect(() => parseSolicitudes({ ...vacia, size: 100 })).toThrow(RespuestaIncompatible);
   });
 });

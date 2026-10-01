@@ -9,7 +9,7 @@ const MENSAJES_HTTP: Record<number, string> = {
   404: 'No se encontró una solicitud con esa referencia.',
   405: 'La operación solicitada no está disponible.',
   406: 'El servidor no puede entregar una respuesta compatible.',
-  409: 'La referencia ya está asociada a otros datos.',
+  409: 'La clave de envío ya está asociada a otros datos.',
   413: 'El cuerpo de la solicitud es demasiado grande.',
   415: 'El servidor no acepta el formato enviado.',
   500: 'No fue posible procesar la petición.',

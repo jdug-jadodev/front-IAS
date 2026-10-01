@@ -1,4 +1,5 @@
 @let recientes = store.recientes();
+@let pagina = store.paginaRecientes();
 <div class="solicitudes-recientes">
   @if (recientes.cargando) {
     <app-indicador-carga texto="Actualizando solicitudes…" />
@@ -12,7 +13,7 @@
       <p class="ayuda">Se conservan los últimos datos recibidos.</p>
     }
   }
-  @if (!recientes.cargando && !recientes.error && !recientes.datos.length) {
+  @if (!recientes.cargando && !recientes.error && pagina?.totalElements === 0) {
     <div class="vacio">
       <strong>Aún no hay solicitudes registradas.</strong>
       <p>Cuando se procese una operación, aparecerá en este listado.</p>
@@ -60,5 +61,26 @@
       }
     </ul>
     <p class="pie-listado">Selecciona una solicitud para consultar su detalle.</p>
+  }
+  @if (pagina && pagina.totalPages > 0) {
+    <nav class="pie-listado" aria-label="Páginas de solicitudes">
+      <button
+        type="button"
+        class="boton-texto"
+        [disabled]="recientes.cargando || pagina.first"
+        (click)="store.cambiarPaginaRecientes(pagina.page - 1)"
+      >
+        Anterior
+      </button>
+      <span>Página {{ pagina.page + 1 }} de {{ pagina.totalPages }}</span>
+      <button
+        type="button"
+        class="boton-texto"
+        [disabled]="recientes.cargando || pagina.last"
+        (click)="store.cambiarPaginaRecientes(pagina.page + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
   }
 </div>

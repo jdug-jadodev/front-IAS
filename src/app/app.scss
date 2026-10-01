@@ -1,73 +1,64 @@
-.franja-marca {
-  height: 0.25rem;
-  background: linear-gradient(
-    90deg,
-    var(--color-brand-yellow) 0 25%,
-    var(--color-brand-pink) 25% 50%,
-    var(--color-brand-navy) 50% 75%,
-    var(--color-brand-blue) 75%
-  );
-}
-
 .cabecera-app {
-  min-height: 4.75rem;
-  background: var(--color-surface);
+  position: relative;
+  z-index: 5;
+  min-height: 5.25rem;
+  background: var(--color-background);
 }
 
 .cabecera-contenido {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  min-height: 4.75rem;
-  gap: 1.125rem;
-  padding-block: 1.125rem;
+  min-height: 5.25rem;
+  gap: 1.5rem;
 }
 
-.identidad {
-  display: flex;
-  align-items: center;
-  gap: 1.125rem;
-  min-width: 0;
-}
-
-.logotipo {
-  flex: 0 0 auto;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.1875rem;
-  padding: 0.3125rem 0.4375rem;
-  background: #ffffff;
-}
-
-.logotipo img {
-  display: block;
-  width: 9rem;
-  height: auto;
-}
-
-.producto {
-  display: grid;
-  border-inline-start: 1px solid var(--color-border);
-  padding-inline-start: 1.125rem;
+.marca {
+  display: inline-flex;
+  align-items: flex-start;
   color: var(--color-text-strong);
-  line-height: 1.3;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  line-height: 1.1;
+  text-decoration: none;
 }
 
-.producto strong {
-  font-size: 1rem;
+.marca span {
+  color: var(--color-brand-blue);
 }
 
-.producto span,
-.entorno {
-  color: var(--color-text-muted);
-  font-size: 0.6875rem;
+.marca i {
+  width: 0.62rem;
+  height: 0.62rem;
+  margin: 0.08rem 0 0 0.35rem;
+  background: var(--color-brand-yellow);
 }
 
-.entorno {
-  white-space: nowrap;
+.navegacion {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.navegacion a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-strong);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 0.35em;
+}
+
+.navegacion a:hover {
+  color: var(--color-brand-blue);
+  text-decoration: underline;
+}
+
+.navegacion a span {
+  margin-left: 0.25em;
 }
 
 main {
@@ -79,7 +70,7 @@ main {
   top: -6rem;
   left: 1rem;
   z-index: 20;
-  border: 2px solid var(--color-brand-navy);
+  border: 2px solid var(--color-brand-blue);
   border-radius: var(--radius-control);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface);
@@ -91,36 +82,32 @@ main {
   top: 1rem;
 }
 
-@media (max-width: 27.5rem) {
+@media (max-width: 30rem) {
+  .cabecera-app,
   .cabecera-contenido {
-    min-height: 0;
-    gap: 0.625rem;
-    padding-block: 0.9375rem;
+    min-height: 4.5rem;
   }
 
-  .identidad {
-    gap: 0.625rem;
+  .marca {
+    font-size: 1.55rem;
   }
 
-  .logotipo {
-    padding: 0.25rem 0.375rem;
+  .marca i {
+    width: 0.48rem;
+    height: 0.48rem;
+    margin-left: 0.25rem;
   }
 
-  .logotipo img {
-    width: 7.8125rem;
+  .navegacion {
+    gap: 0.85rem;
   }
 
-  .producto {
-    border-inline-start: 0;
-    padding-inline-start: 0;
+  .navegacion a {
+    font-size: 0.73rem;
   }
 
-  .producto strong {
-    font-size: 0.875rem;
-  }
-
-  .producto span,
-  .entorno {
+  .navegacion a span {
     display: none;
+    margin-left: 0;
   }
 }

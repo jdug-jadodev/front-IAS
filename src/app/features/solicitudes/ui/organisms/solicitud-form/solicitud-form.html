@@ -1,6 +1,6 @@
 <div class="solicitud-formulario">
   <p class="texto-secundario introduccion">
-    Completa los datos. El sistema de créditos devolverá la decisión procesada.
+    Cuéntanos qué necesitas. Podrás revisar los tres datos antes de enviarlos.
   </p>
   <p class="etiqueta">Todos los campos son obligatorios.</p>
 
@@ -27,10 +27,6 @@
           </p>
         </div>
         <dl class="resumen-revision">
-          <div>
-            <dt>Referencia</dt>
-            <dd class="dato-exacto">{{ revision.applicationReference }}</dd>
-          </div>
           <div>
             <dt>Cliente</dt>
             <dd class="dato-exacto">{{ revision.customerId }}</dd>
@@ -60,26 +56,6 @@
       <div class="cuadricula-campos">
         <app-campo
           class="campo-ancho"
-          controlId="referencia"
-          etiqueta="Referencia de la solicitud"
-          ayuda="Identifica esta operación y permite recuperar su resultado."
-          [error]="error('applicationReference')"
-        >
-          <input
-            id="referencia"
-            name="applicationReference"
-            type="text"
-            formControlName="applicationReference"
-            placeholder="Ej. REF-004"
-            autocomplete="off"
-            spellcheck="false"
-            required
-            aria-describedby="referencia-ayuda referencia-error"
-            [attr.aria-invalid]="!!error('applicationReference')"
-          />
-        </app-campo>
-        <app-campo
-          class="campo-ancho"
           controlId="cliente"
           etiqueta="ID del cliente"
           ayuda="Ingresa el identificador tal como está registrado."
@@ -89,6 +65,8 @@
             id="cliente"
             name="customerId"
             type="text"
+            appMayusculas
+            data-escena="cliente"
             formControlName="customerId"
             placeholder="Ej. CLI-1001"
             autocomplete="off"
@@ -104,19 +82,23 @@
           ayuda="Usa punto decimal y ningún separador de miles. Ejemplo: 1000000.00."
           [error]="error('amount')"
         >
-          <input
-            id="monto"
-            name="amount"
-            type="text"
-            inputmode="decimal"
-            formControlName="amount"
-            placeholder="Ej. 1000000.00"
-            autocomplete="off"
-            spellcheck="false"
-            required
-            aria-describedby="monto-ayuda monto-error"
-            [attr.aria-invalid]="!!error('amount')"
-          />
+          <div class="control-con-unidad">
+            <input
+              id="monto"
+              name="amount"
+              type="text"
+              data-escena="monto"
+              inputmode="decimal"
+              formControlName="amount"
+              placeholder="Ej. 1000000.00"
+              autocomplete="off"
+              spellcheck="false"
+              required
+              aria-describedby="monto-ayuda monto-error"
+              [attr.aria-invalid]="!!error('amount')"
+            />
+            <span class="unidad" aria-hidden="true">COP</span>
+          </div>
         </app-campo>
         <app-campo
           controlId="plazo"
@@ -124,29 +106,27 @@
           ayuda="Entre 6 y 60 meses, sin fracciones."
           [error]="error('termMonths')"
         >
-          <input
-            id="plazo"
-            name="termMonths"
-            type="number"
-            inputmode="numeric"
-            min="6"
-            max="60"
-            step="1"
-            formControlName="termMonths"
-            placeholder="Ej. 24"
-            autocomplete="off"
-            required
-            aria-describedby="plazo-ayuda plazo-error"
-            [attr.aria-invalid]="!!error('termMonths')"
-          />
+          <div class="control-con-unidad">
+            <input
+              id="plazo"
+              name="termMonths"
+              type="number"
+              data-escena="plazo"
+              inputmode="numeric"
+              min="6"
+              max="60"
+              step="1"
+              formControlName="termMonths"
+              placeholder="Ej. 24"
+              autocomplete="off"
+              required
+              aria-describedby="plazo-ayuda plazo-error"
+              [attr.aria-invalid]="!!error('termMonths')"
+            />
+            <span class="unidad" aria-hidden="true">meses</span>
+          </div>
         </app-campo>
       </div>
-      @if (store.referenciaEnConflicto()) {
-        <p class="ayuda">
-          La referencia {{ store.referenciaEnConflicto() }} ya está asociada a otros datos. Usa otra
-          para una nueva solicitud.
-        </p>
-      }
       <div class="acciones">
         <button type="submit" class="boton-primario" [disabled]="store.edicionBloqueada()">
           Revisar solicitud

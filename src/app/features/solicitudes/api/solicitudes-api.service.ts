@@ -13,21 +13,28 @@ export const SOLICITUD_TIMEOUT_MS = new InjectionToken<number>('SOLICITUD_TIMEOU
   factory: () => 15_000,
 });
 
+export const SOLICITUDES_POR_PAGINA = 20;
+
 @Injectable({ providedIn: 'root' })
 export class SolicitudesApiService {
   private readonly http = inject(HttpClient);
   private readonly espera = inject(SOLICITUD_TIMEOUT_MS);
   private readonly url = '/api/applications';
 
-  enviar(datos: SolicitudEntrada) {
-    return this.http.post<unknown>(this.url, datos, { observe: 'response' }).pipe(
-      timeout(this.espera),
-      map((response): RespuestaEnvioSolicitud => {
-        const httpStatus = response.status;
-        if (httpStatus !== 200 && httpStatus !== 201) throw new RespuestaIncompatible();
-        return { httpStatus, solicitud: parseSolicitud(response.body) };
-      }),
-    );
+  enviar(datos: SolicitudEntrada, idempotencyKey: string) {
+    return this.http
+      .post<unknown>(this.url, datos, {
+        observe: 'response',
+        headers: { 'Idempotency-Key': idempotencyKey },
+      })
+      .pipe(
+        timeout(this.espera),
+        map((response): RespuestaEnvioSolicitud => {
+          const httpStatus = response.status;
+          if (httpStatus !== 200 && httpStatus !== 201) throw new RespuestaIncompatible();
+          return { httpStatus, solicitud: parseSolicitud(response.body) };
+        }),
+      );
   }
 
   consultar(referencia: string) {
@@ -36,9 +43,9 @@ export class SolicitudesApiService {
       .pipe(timeout(this.espera), map(parseSolicitud));
   }
 
-  recientes() {
+  recientes(page = 0) {
     return this.http
-      .get<unknown>(this.url, { params: { limit: 20 } })
+      .get<unknown>(this.url, { params: { page, size: SOLICITUDES_POR_PAGINA } })
       .pipe(timeout(this.espera), map(parseSolicitudes));
   }
 }

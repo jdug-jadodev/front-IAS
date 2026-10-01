@@ -1,5 +1,4 @@
 export interface SolicitudEntrada {
-  readonly applicationReference: string;
   readonly customerId: string;
   readonly amount: string;
   readonly termMonths: number;
@@ -13,6 +12,7 @@ export type CodigoMotivoRechazo =
   | 'INSUFFICIENT_LIMIT';
 
 export type SolicitudResultado = SolicitudEntrada & {
+  readonly applicationReference: string;
   readonly message: string;
   readonly processedAt: string;
 } & (
@@ -23,6 +23,16 @@ export type SolicitudResultado = SolicitudEntrada & {
         readonly reason: string;
       }
   );
+
+export interface PaginaSolicitudes {
+  readonly content: readonly SolicitudResultado[];
+  readonly page: number;
+  readonly size: number;
+  readonly totalElements: number;
+  readonly totalPages: number;
+  readonly first: boolean;
+  readonly last: boolean;
+}
 
 export interface RespuestaEnvioSolicitud {
   readonly httpStatus: 200 | 201;
@@ -53,7 +63,7 @@ export type EnvioEstado =
       readonly tipo: 'unconfirmed';
       readonly datos: SolicitudEntrada;
       readonly error: ErrorUi;
-      readonly recuperacion: 'consulta' | 'reintento' | null;
+      readonly recuperacion: 'reintento' | null;
     };
 
 export interface LecturaEstado<T> {

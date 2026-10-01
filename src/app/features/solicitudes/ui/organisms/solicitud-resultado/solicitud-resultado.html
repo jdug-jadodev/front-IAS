@@ -6,9 +6,6 @@
     }
     @case ('submitting') {
       <app-indicador-carga texto="Enviando solicitud…" />
-      <p class="referencia-operacion" translate="no">
-        Referencia: <strong>{{ estado.datos.applicationReference }}</strong>
-      </p>
       <p class="ayuda">
         Conservamos una copia exacta de los datos mientras esperamos la respuesta.
       </p>
@@ -28,29 +25,18 @@
       <p class="ayuda">Revisa el mensaje, ajusta la solicitud y vuelve a enviarla.</p>
     }
     @case ('conflict') {
-      <p class="estado estado--conflicto">Referencia en conflicto</p>
+      <p class="estado estado--conflicto">Envío en conflicto</p>
       <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
-      <p class="referencia-operacion" translate="no">
-        Referencia: <strong>{{ estado.datos.applicationReference }}</strong>
-      </p>
-      <p class="ayuda">Consulta el registro original o inicia una solicitud con otra referencia.</p>
+      <p class="ayuda">Inicia una nueva solicitud para usar una clave de envío diferente.</p>
       <div class="acciones">
-        <button
-          type="button"
-          aria-controls="consulta-referencia"
-          (click)="consultarOriginal(estado.datos.applicationReference)"
-        >
-          Consultar original
-        </button>
         <button type="button" (click)="nuevaSolicitudSolicitada.emit()">Nueva solicitud</button>
       </div>
     }
     @case ('unconfirmed') {
       <p class="estado estado--pendiente">Resultado sin confirmar</p>
-      <h3 class="referencia-pendiente" translate="no">{{ estado.datos.applicationReference }}</h3>
       <p class="texto-secundario">
-        Conservamos los datos originales. Consulta la referencia o reintenta exactamente el mismo
-        envío para confirmar el resultado.
+        Aún no recibimos la referencia. Conservamos los datos y la clave del envío original para
+        reintentarlo sin crear otra solicitud.
       </p>
       <dl class="resumen-pendiente">
         <div>
@@ -72,22 +58,9 @@
         [detalle]="estado.error.traceId ?? ''"
       />
       @if (store.recuperando()) {
-        <app-indicador-carga
-          [texto]="
-            estado.recuperacion === 'consulta'
-              ? 'Consultando el envío pendiente…'
-              : 'Reintentando el envío original…'
-          "
-        />
+        <app-indicador-carga texto="Reintentando el envío original…" />
       }
       <div class="acciones">
-        <button
-          type="button"
-          [disabled]="store.recuperando()"
-          (click)="store.consultarEnvioPendiente()"
-        >
-          Consultar esta referencia
-        </button>
         <button type="button" [disabled]="store.recuperando()" (click)="store.reintentarEnvio()">
           Reintentar mismo envío
         </button>
