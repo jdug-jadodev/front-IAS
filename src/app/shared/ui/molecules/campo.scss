@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
 .campo {
   display: grid;
   gap: 0.375rem;

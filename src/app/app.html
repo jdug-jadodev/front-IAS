@@ -1,10 +1,19 @@
 <a class="saltar-contenido" href="#contenido">Saltar al contenido</a>
+<div class="franja-marca" aria-hidden="true"></div>
 <header class="cabecera-app">
-  <div class="contenedor">
-    <p class="marca">IAS <span>Créditos</span></p>
-    <span class="texto-secundario">Gestión de solicitudes</span>
+  <div class="contenedor cabecera-contenido">
+    <div class="identidad">
+      <p class="logotipo" role="img" aria-label="IAS Software">
+        <span aria-hidden="true"><strong>ias</strong>software</span>
+      </p>
+      <div class="producto">
+        <strong>BancoIAS</strong>
+        <span>Gestión de crédito</span>
+      </div>
+    </div>
+    <span class="entorno">Entorno de prueba</span>
   </div>
 </header>
-<main id="contenido" class="contenedor" tabindex="-1">
+<main id="contenido" tabindex="-1">
   <router-outlet />
 </main>

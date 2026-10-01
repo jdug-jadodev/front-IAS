@@ -1,15 +1,15 @@
 .mensaje {
-  padding: 1rem;
-  margin-block: 1rem;
-  border-inline-start: 3px solid #075985;
+  margin-block: var(--space-4);
+  border: 1px solid #acd8ef;
   border-radius: var(--radius-control);
-  color: #075985;
-  background: #f0f9ff;
+  padding: var(--space-3);
+  background: var(--color-info-surface);
+  color: var(--color-info);
 }
 .mensaje--error {
-  border-color: var(--color-error);
+  border-color: #efc7ca;
+  background: var(--color-error-surface);
   color: var(--color-error);
-  background: #fef3f2;
 }
 p {
   margin: 0;

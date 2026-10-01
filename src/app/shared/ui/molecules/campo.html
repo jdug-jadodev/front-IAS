@@ -1,6 +1,10 @@
 <div class="campo">
   <label [for]="controlId()">{{ etiqueta() }}</label>
   <ng-content />
-  <small class="ayuda" [id]="controlId() + '-ayuda'">{{ ayuda() }}</small>
-  <small class="error-campo" [id]="controlId() + '-error'">{{ error() }}</small>
+  @if (ayuda()) {
+    <small class="ayuda" [id]="controlId() + '-ayuda'">{{ ayuda() }}</small>
+  }
+  <small class="error-campo" aria-live="polite" [id]="controlId() + '-error'">{{
+    error()
+  }}</small>
 </div>
