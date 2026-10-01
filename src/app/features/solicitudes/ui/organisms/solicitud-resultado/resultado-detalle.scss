@@ -71,10 +71,6 @@ dd {
   margin-top: var(--space-1);
 }
 
-.motivo-rechazo .codigo {
-  font-size: 0.75rem;
-}
-
 @media (max-width: 24rem) {
   .detalle-resultado {
     grid-template-columns: minmax(0, 1fr);

@@ -5,10 +5,7 @@
     <app-indicador-carga texto="Actualizando solicitudes…" />
   }
   @if (recientes.error; as error) {
-    <app-mensaje
-      [texto]="'No se pudo actualizar el listado. ' + error.message"
-      [detalle]="error.traceId ?? ''"
-    />
+    <app-mensaje [texto]="'No se pudo actualizar el listado. ' + error.message" />
     @if (recientes.datos.length) {
       <p class="ayuda">Se conservan los últimos datos recibidos.</p>
     }
