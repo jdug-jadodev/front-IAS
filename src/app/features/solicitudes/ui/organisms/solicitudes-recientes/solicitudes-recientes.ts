@@ -9,6 +9,7 @@ import { ResultadoDetalle } from '../solicitud-resultado/resultado-detalle';
   selector: 'app-solicitudes-recientes',
   imports: [DatePipe, IndicadorCarga, Mensaje, ResultadoDetalle],
   templateUrl: './solicitudes-recientes.html',
+  styleUrl: './solicitudes-recientes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SolicitudesRecientes {

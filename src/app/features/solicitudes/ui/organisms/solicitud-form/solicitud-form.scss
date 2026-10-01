@@ -1,0 +1,11 @@
+.cuadricula-campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1rem;
+  margin-top: 1.5rem;
+}
+@media (max-width: 600px) {
+  .cuadricula-campos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

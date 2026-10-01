@@ -10,6 +10,7 @@ import { SolicitudesRecientes } from '../../ui/organisms/solicitudes-recientes/s
   imports: [SolicitudForm, SolicitudResultado, ConsultaReferencia, SolicitudesRecientes],
   providers: [SolicitudesStore],
   templateUrl: './solicitudes-page.html',
+  styleUrl: './solicitudes-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SolicitudesPage implements OnInit {

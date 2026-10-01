@@ -1,0 +1,18 @@
+.campo {
+  display: grid;
+  gap: 0.375rem;
+  margin-bottom: 1rem;
+}
+label {
+  font-weight: 600;
+}
+small {
+  display: block;
+  font-size: 0.875rem;
+}
+.error-campo {
+  color: var(--color-error);
+}
+.error-campo:empty {
+  display: none;
+}

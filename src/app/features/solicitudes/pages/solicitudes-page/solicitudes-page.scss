@@ -1,0 +1,22 @@
+:host {
+  display: block;
+}
+.titulo-pagina {
+  margin-bottom: 2rem;
+}
+.cuadricula-principal,
+.cuadricula-secundaria {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.cuadricula-secundaria {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+}
+@media (max-width: 960px) {
+  .cuadricula-principal,
+  .cuadricula-secundaria {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -7,6 +7,7 @@ import { SolicitudResultado } from '../../../models/solicitud.model';
   imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './resultado-detalle.html',
+  styleUrl: './resultado-detalle.scss',
 })
 export class ResultadoDetalle {
   readonly resultado = input.required<SolicitudResultado>();

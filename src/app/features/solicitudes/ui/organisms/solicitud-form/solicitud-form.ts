@@ -19,6 +19,7 @@ import {
   selector: 'app-solicitud-form',
   imports: [ReactiveFormsModule, Campo],
   templateUrl: './solicitud-form.html',
+  styleUrl: './solicitud-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SolicitudForm {

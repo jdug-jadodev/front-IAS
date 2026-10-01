@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-mensaje',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './mensaje.html',
+  styleUrl: './mensaje.scss',
 })
 export class Mensaje {
   readonly texto = input.required<string>();

@@ -1,0 +1,21 @@
+.mensaje {
+  padding: 1rem;
+  margin-block: 1rem;
+  border-inline-start: 3px solid #075985;
+  border-radius: var(--radius-control);
+  color: #075985;
+  background: #f0f9ff;
+}
+.mensaje--error {
+  border-color: var(--color-error);
+  color: var(--color-error);
+  background: #fef3f2;
+}
+p {
+  margin: 0;
+}
+small {
+  display: block;
+  margin-top: 0.5rem;
+  overflow-wrap: anywhere;
+}

@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   selector: 'app-campo',
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './campo.html',
+  styleUrl: './campo.scss',
 })
 export class Campo {
   readonly controlId = input.required<string>();
