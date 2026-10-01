@@ -1,0 +1,101 @@
+<section class="panel" aria-labelledby="titulo-formulario">
+  <div class="encabezado-panel">
+    <div>
+      <p class="sobrelinea">01 · Registrar</p>
+      <h2 id="titulo-formulario">Solicitud de crédito</h2>
+    </div>
+    <span class="etiqueta">Todos los campos son obligatorios</span>
+  </div>
+  <p class="texto-secundario">
+    Completa los datos. El resultado será decidido por el sistema de créditos.
+  </p>
+  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate autocomplete="off">
+    <div class="cuadricula-campos">
+      <app-campo
+        controlId="referencia"
+        etiqueta="Referencia de la solicitud"
+        ayuda="Identifica esta operación y permite recuperar su resultado."
+        [error]="error('applicationReference')"
+      >
+        <input
+          id="referencia"
+          type="text"
+          formControlName="applicationReference"
+          required
+          aria-describedby="referencia-ayuda referencia-error"
+          [attr.aria-invalid]="!!error('applicationReference')"
+        />
+      </app-campo>
+      <app-campo
+        controlId="cliente"
+        etiqueta="Identificador del cliente"
+        ayuda="Ingresa el identificador tal como está registrado."
+        [error]="error('customerId')"
+      >
+        <input
+          id="cliente"
+          type="text"
+          formControlName="customerId"
+          required
+          aria-describedby="cliente-ayuda cliente-error"
+          [attr.aria-invalid]="!!error('customerId')"
+        />
+      </app-campo>
+      <app-campo
+        controlId="monto"
+        etiqueta="Monto solicitado"
+        ayuda="Usa punto decimal y ningún separador de miles. Ejemplo: 1000000.00."
+        [error]="error('amount')"
+      >
+        <input
+          id="monto"
+          type="text"
+          inputmode="decimal"
+          formControlName="amount"
+          required
+          aria-describedby="monto-ayuda monto-error"
+          [attr.aria-invalid]="!!error('amount')"
+        />
+      </app-campo>
+      <app-campo
+        controlId="plazo"
+        etiqueta="Plazo en meses"
+        ayuda="Entre 6 y 60 meses, sin fracciones."
+        [error]="error('termMonths')"
+      >
+        <input
+          id="plazo"
+          type="number"
+          inputmode="numeric"
+          min="6"
+          max="60"
+          step="1"
+          formControlName="termMonths"
+          required
+          aria-describedby="plazo-ayuda plazo-error"
+          [attr.aria-invalid]="!!error('termMonths')"
+        />
+      </app-campo>
+    </div>
+    @if (store.referenciaEnConflicto()) {
+      <p class="ayuda">
+        La referencia {{ store.referenciaEnConflicto() }} ya está asociada a otros datos. Usa otra
+        para una nueva solicitud.
+      </p>
+    }
+    <div class="acciones">
+      <button type="submit" class="boton-primario" [disabled]="store.edicionBloqueada()">
+        Enviar solicitud
+      </button>
+      <button type="button" (click)="store.nuevaSolicitud()" [disabled]="store.edicionBloqueada()">
+        Limpiar campos
+      </button>
+    </div>
+    @if (store.edicionBloqueada()) {
+      <p class="ayuda">
+        Los datos están bloqueados para conservar la solicitud enviada. Revisa el panel de
+        resultado.
+      </p>
+    }
+  </form>
+</section>

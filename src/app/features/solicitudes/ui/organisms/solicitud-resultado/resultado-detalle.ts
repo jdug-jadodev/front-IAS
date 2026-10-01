@@ -1,0 +1,52 @@
+import { DatePipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { SolicitudResultado } from '../../../models/solicitud.model';
+
+@Component({
+  selector: 'app-resultado-detalle',
+  imports: [DatePipe],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    @let datos = resultado();
+    <p
+      class="estado"
+      [class.estado--aprobado]="datos.status === 'APPROVED'"
+      [class.estado--rechazado]="datos.status === 'REJECTED'"
+    >
+      {{ datos.status === 'APPROVED' ? 'Aprobada' : 'Rechazada' }}
+    </p>
+    <dl class="detalle-resultado">
+      <div>
+        <dt>Referencia</dt>
+        <dd>{{ datos.applicationReference }}</dd>
+      </div>
+      <div>
+        <dt>Cliente</dt>
+        <dd>{{ datos.customerId }}</dd>
+      </div>
+      <div>
+        <dt>Monto</dt>
+        <dd>{{ datos.amount }}</dd>
+      </div>
+      <div>
+        <dt>Plazo</dt>
+        <dd>{{ datos.termMonths }} meses</dd>
+      </div>
+      <div class="ancho-completo">
+        <dt>Procesada (UTC)</dt>
+        <dd>
+          <time [attr.datetime]="datos.processedAt">{{
+            datos.processedAt | date: 'dd/MM/yyyy HH:mm:ss' : 'UTC'
+          }}</time>
+        </dd>
+      </div>
+    </dl>
+    @if (datos.status === 'REJECTED') {
+      <p><strong>Motivo:</strong> {{ datos.reason }}</p>
+      <p class="ayuda">Código: {{ datos.reasonCode }}</p>
+    }
+  `,
+})
+export class ResultadoDetalle {
+  readonly resultado = input.required<SolicitudResultado>();
+}
