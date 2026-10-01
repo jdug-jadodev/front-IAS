@@ -1,15 +1,80 @@
-<div class="titulo-pagina">
-  <p class="sobrelinea">Gestión de créditos</p>
-  <h1>Solicitudes de crédito</h1>
-  <p class="texto-secundario">
-    Registra una solicitud, revisa su resultado y consulta las operaciones recientes.
-  </p>
-</div>
-<div class="cuadricula-principal">
-  <app-solicitud-form />
-  <app-solicitud-resultado />
-</div>
-<div class="cuadricula-secundaria">
-  <app-consulta-referencia />
-  <app-solicitudes-recientes />
+<section class="masthead" aria-labelledby="titulo-pagina">
+  <div class="contenedor masthead-contenido">
+    <div>
+      <h1 id="titulo-pagina">Solicitudes de crédito</h1>
+      <p>Cada decisión, con su información a la mano.</p>
+    </div>
+    <button
+      type="button"
+      class="boton-primario accion-masthead"
+      [disabled]="accionPrincipalBloqueada()"
+      (click)="prepararSolicitud()"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v14M5 12h14" />
+      </svg>
+      {{ etiquetaAccionPrincipal() }}
+    </button>
+  </div>
+</section>
+
+<div class="superficie-trabajo">
+  <div class="contenedor cuadricula-trabajo">
+    @let recientes = store.recientes();
+    <section
+      class="panel panel-solicitudes"
+      aria-labelledby="titulo-recientes"
+      [attr.aria-busy]="recientes.cargando"
+    >
+      <div class="encabezado-listado">
+        <div>
+          <h2 id="titulo-recientes">Solicitudes recientes</h2>
+          <p class="texto-secundario">Últimas 20 operaciones registradas por el backend.</p>
+        </div>
+        <div class="acciones-listado">
+          <span
+            class="contador"
+            [attr.aria-label]="recientes.datos.length + ' solicitudes cargadas'"
+            >{{ recientes.datos.length }}</span
+          >
+          <button
+            type="button"
+            class="boton-texto"
+            [disabled]="recientes.cargando"
+            (click)="store.cargarRecientes()"
+          >
+            {{ recientes.cargando ? 'Actualizando…' : 'Actualizar' }}
+          </button>
+        </div>
+      </div>
+
+      <app-consulta-referencia (consultaSolicitada)="mostrarConsulta()" />
+      <app-solicitudes-recientes (solicitudSeleccionada)="mostrarSolicitud($event)" />
+    </section>
+
+    <section class="panel panel-inspector" [attr.aria-labelledby]="'titulo-inspector'">
+      <div class="encabezado-inspector">
+        <h2 id="titulo-inspector">{{ tituloInspector() }}</h2>
+        @if (vistaInspector() === 'consulta') {
+          <button type="button" class="boton-texto" (click)="volverAlFlujoPrincipal()">
+            {{ etiquetaRetorno() }}
+          </button>
+        }
+      </div>
+      <div class="contenido-inspector">
+        <app-solicitud-form [hidden]="vistaInspector() !== 'formulario'" />
+        <app-solicitud-resultado
+          [hidden]="vistaInspector() !== 'envio'"
+          (nuevaSolicitudSolicitada)="prepararSolicitud()"
+          (consultaSolicitada)="mostrarConsulta()"
+        />
+        <app-consulta-resultado [hidden]="vistaInspector() !== 'consulta'" />
+      </div>
+    </section>
+  </div>
+
+  <footer class="contenedor pie-pagina">
+    <span>Prueba técnica BancoIAS</span>
+    <span>Estado de sesión en memoria</span>
+  </footer>
 </div>

@@ -1,20 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, output } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { IndicadorCarga } from '../../../../../shared/ui/atoms/indicador-carga';
-import { Mensaje } from '../../../../../shared/ui/atoms/mensaje';
 import { Campo } from '../../../../../shared/ui/molecules/campo';
 import { SolicitudesStore } from '../../../state/solicitudes.store';
 import { noBlancos } from '../../../validation/solicitud-form.validators';
-import { ResultadoDetalle } from '../solicitud-resultado/resultado-detalle';
 
 @Component({
   selector: 'app-consulta-referencia',
-  imports: [ReactiveFormsModule, IndicadorCarga, Mensaje, Campo, ResultadoDetalle],
+  imports: [ReactiveFormsModule, Campo],
   templateUrl: './consulta-referencia.html',
+  styleUrl: './consulta-referencia.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConsultaReferencia {
   protected readonly store = inject(SolicitudesStore);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly consultaSolicitada = output<void>();
   protected readonly referencia = new FormControl('', {
     nonNullable: true,
     validators: [noBlancos],
@@ -23,7 +23,11 @@ export class ConsultaReferencia {
 
   protected consultar(): void {
     this.referencia.markAsTouched();
-    if (this.referencia.invalid) return;
+    if (this.referencia.invalid) {
+      queueMicrotask(() => this.host.nativeElement.querySelector<HTMLInputElement>('input')?.focus());
+      return;
+    }
     this.store.consultarPorReferencia(this.referencia.value);
+    this.consultaSolicitada.emit();
   }
 }

@@ -35,6 +35,7 @@ export class SolicitudesStore {
   private lecturaConsulta = 0;
   private peticionRecientes?: Subscription;
   private peticionConsulta?: Subscription;
+  private readonly referenciasEnConflicto = new Set<string>();
 
   readonly envio = this._envio.asReadonly();
   readonly recientes = this._recientes.asReadonly();
@@ -55,7 +56,8 @@ export class SolicitudesStore {
       amount: entrada.amount,
       termMonths: entrada.termMonths,
     });
-    if (datos.applicationReference === this.referenciaEnConflicto()) {
+    if (this.referenciasEnConflicto.has(datos.applicationReference)) {
+      this._referenciaEnConflicto.set(datos.applicationReference);
       this._envio.set({
         tipo: 'invalid',
         datos,
@@ -63,6 +65,7 @@ export class SolicitudesStore {
       });
       return;
     }
+    this._referenciaEnConflicto.set(null);
     this._envio.set({ tipo: 'submitting', datos });
     this.ejecutarPost(datos);
   }
@@ -164,10 +167,17 @@ export class SolicitudesStore {
       });
   }
 
+  seleccionarConsulta(resultado: SolicitudResultado): void {
+    ++this.lecturaConsulta;
+    this.peticionConsulta?.unsubscribe();
+    this._consulta.set({ datos: resultado, cargando: false, error: null });
+  }
+
   nuevaSolicitud(): void {
     if (this.envio().tipo === 'submitting' || this.envio().tipo === 'unconfirmed') return;
     ++this.operacion;
     this._envio.set({ tipo: 'idle' });
+    this._referenciaEnConflicto.set(null);
     this._revision.update((revision) => revision + 1);
   }
 
@@ -193,11 +203,13 @@ export class SolicitudesStore {
   }
 
   private confirmar(datos: SolicitudEntrada, resultado: SolicitudResultado): void {
+    this._referenciaEnConflicto.set(null);
     this._envio.set({ tipo: 'resolved', datos, resultado });
     this.cargarRecientes();
   }
 
   private conflicto(datos: SolicitudEntrada, error: ErrorUi): void {
+    this.referenciasEnConflicto.add(datos.applicationReference);
     this._referenciaEnConflicto.set(datos.applicationReference);
     this._envio.set({ tipo: 'conflict', datos, error });
   }

@@ -27,6 +27,7 @@ describe('Página de solicitudes', () => {
       'app-solicitud-form',
       'app-solicitud-resultado',
       'app-consulta-referencia',
+      'app-consulta-resultado',
       'app-solicitudes-recientes',
     ]) {
       expect(fixture.debugElement.query(By.css(selector)).injector.get(SolicitudesStore)).toBe(
@@ -64,7 +65,7 @@ describe('Página de solicitudes', () => {
       .expectOne(`/api/applications/${encodeURIComponent('r/ñ')}`)
       .flush({}, { status: 404, statusText: 'Not Found' });
     fixture.detectChanges();
-    expect(element.querySelector('app-consulta-referencia')?.textContent).toContain(
+    expect(element.querySelector('app-consulta-resultado')?.textContent).toContain(
       'No se encontró',
     );
     expect(store.envio().tipo).toBe('resolved');
@@ -75,5 +76,44 @@ describe('Página de solicitudes', () => {
     const req = http.expectOne('/api/applications?limit=20');
     fixture.destroy();
     expect(req.cancelled).toBe(true);
+  });
+
+  it('conserva el borrador al consultar otra referencia', () => {
+    http.expectOne('/api/applications?limit=20').flush([]);
+    const element = fixture.nativeElement as HTMLElement;
+    const escribir = (id: string, value: string) => {
+      const input = element.querySelector<HTMLInputElement>(`#${id}`)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+    escribir('referencia', 'BORRADOR-1');
+    escribir('cliente', 'CLI-BORRADOR');
+    escribir('monto', '9007199254740993.0001');
+    escribir('plazo', '24');
+    escribir('consulta', 'REF-CONSULTADA');
+
+    element
+      .querySelector('app-consulta-referencia form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    http.expectOne('/api/applications/REF-CONSULTADA').flush({
+      applicationReference: 'REF-CONSULTADA',
+      customerId: 'CLI-1',
+      amount: '100.00',
+      termMonths: 12,
+      status: 'APPROVED',
+      processedAt: '2026-10-01T10:00:00Z',
+    });
+    fixture.detectChanges();
+    element
+      .querySelector<HTMLButtonElement>('.encabezado-inspector .boton-texto')!
+      .click();
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('BORRADOR-1');
+    expect(element.querySelector<HTMLInputElement>('#cliente')!.value).toBe('CLI-BORRADOR');
+    expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe(
+      '9007199254740993.0001',
+    );
+    expect(element.querySelector<HTMLInputElement>('#plazo')!.value).toBe('24');
   });
 });

@@ -14,7 +14,11 @@ describe('SolicitudesStore', () => {
     amount: '1.00',
     termMonths: 12,
   };
-  const resultado = { ...datos, status: 'APPROVED', processedAt: '2026-10-01T10:00:00Z' };
+  const resultado = {
+    ...datos,
+    status: 'APPROVED' as const,
+    processedAt: '2026-10-01T10:00:00Z',
+  };
   let store: SolicitudesStore;
   let http: HttpTestingController;
 
@@ -168,6 +172,31 @@ describe('SolicitudesStore', () => {
     store.cargarRecientes();
     expect(listadoAnterior.cancelled).toBe(true);
     http.expectOne(`${url}?limit=20`).flush([]);
+  });
+
+  it('selecciona un resultado reciente sin hacer otro GET ni alterar el envío', () => {
+    store.seleccionarConsulta(resultado);
+
+    expect(store.consulta().datos).toEqual(resultado);
+    expect(store.envio().tipo).toBe('idle');
+    http.expectNone((request) => request.method === 'GET');
+  });
+
+  it('recuerda las referencias conflictivas de la sesión y limpia el aviso visible', () => {
+    store.enviar(datos);
+    http.expectOne(url).flush({}, { status: 409, statusText: 'Conflict' });
+    store.nuevaSolicitud();
+    expect(store.referenciaEnConflicto()).toBeNull();
+
+    const segunda = { ...datos, applicationReference: 'otra-conflictiva' };
+    store.enviar(segunda);
+    http.expectOne(url).flush({}, { status: 409, statusText: 'Conflict' });
+    store.nuevaSolicitud();
+    store.enviar(datos);
+
+    http.expectNone(url);
+    expect(store.envio().tipo).toBe('invalid');
+    expect(store.referenciaEnConflicto()).toBe(datos.applicationReference);
   });
 
   it('el timeout deja el envío sin confirmar y no reintenta automáticamente', () => {
