@@ -37,6 +37,52 @@ describe('Página de solicitudes', () => {
     expect(TestBed.inject(SolicitudesStore, null)).toBeNull();
   });
 
+  it('abre el detalle de la primera solicitud real sin hacer otro GET', () => {
+    const reciente = {
+      applicationReference: 'REF-RECIENTE',
+      customerId: 'CLI-1',
+      amount: '2500000.00',
+      termMonths: 24,
+      status: 'APPROVED' as const,
+      processedAt: '2026-10-01T10:00:00Z',
+    };
+    http.expectOne('/api/applications?limit=20').flush([reciente]);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    expect(store.consulta().datos).toEqual(reciente);
+    expect(element.querySelector('#titulo-inspector')?.textContent).toContain(
+      'Detalle de solicitud',
+    );
+    expect(element.querySelector('app-consulta-resultado')?.hasAttribute('hidden')).toBe(false);
+    expect(element.querySelector('.accion-masthead')?.textContent).toContain('Nueva solicitud');
+    expect(element.querySelector('.encabezado-inspector .boton-texto')).toBeNull();
+    http.expectNone('/api/applications/REF-RECIENTE');
+  });
+
+  it('no selecciona un registro oculto si el usuario abre antes el formulario', () => {
+    const carga = http.expectOne('/api/applications?limit=20');
+    const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.accion-masthead')!.click();
+    fixture.detectChanges();
+
+    carga.flush([
+      {
+        applicationReference: 'REF-TARDIA',
+        customerId: 'CLI-1',
+        amount: '2500000.00',
+        termMonths: 24,
+        status: 'APPROVED',
+        processedAt: '2026-10-01T10:00:00Z',
+      },
+    ]);
+    fixture.detectChanges();
+
+    expect(store.consulta().datos).toBeNull();
+    expect(element.querySelector('app-solicitud-form')?.hasAttribute('hidden')).toBe(false);
+    expect(element.querySelector('[aria-current="true"]')).toBeNull();
+  });
+
   it('muestra un 201 rechazado como rechazo y mantiene independientes las consultas', () => {
     http.expectOne('/api/applications?limit=20').flush([]);
     store.enviar({ applicationReference: 'r', customerId: 'c', amount: '1.00', termMonths: 12 });
@@ -81,6 +127,8 @@ describe('Página de solicitudes', () => {
   it('conserva el borrador y devuelve el foco al volver de una consulta', async () => {
     http.expectOne('/api/applications?limit=20').flush([]);
     const element = fixture.nativeElement as HTMLElement;
+    element.querySelector<HTMLButtonElement>('.accion-masthead')!.click();
+    fixture.detectChanges();
     const escribir = (id: string, value: string) => {
       const input = element.querySelector<HTMLInputElement>(`#${id}`)!;
       input.value = value;

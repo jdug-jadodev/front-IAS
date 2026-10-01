@@ -44,7 +44,9 @@
     <section class="panel panel-inspector" [attr.aria-labelledby]="'titulo-inspector'">
       <div class="encabezado-inspector">
         <h2 id="titulo-inspector" tabindex="-1">{{ tituloInspector() }}</h2>
-        @if (vistaInspector() === 'consulta') {
+        @if (
+          vistaInspector() === 'consulta' && (formularioIniciado() || store.envio().tipo !== 'idle')
+        ) {
           <button type="button" class="boton-texto" (click)="volverAlFlujoPrincipal()">
             {{ etiquetaRetorno() }}
           </button>

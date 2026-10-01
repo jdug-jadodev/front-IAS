@@ -12,7 +12,7 @@ describe('Presentación de solicitudes', () => {
   it('presenta la fecha del backend en la zona de Bogotá', () => {
     const pipe = new FechaSolicitudPipe();
 
-    expect(pipe.transform('2026-10-01T14:30:00Z')).toContain('1/10/2026');
-    expect(pipe.transform('2026-10-01T14:30:00Z')).toContain('9:30');
+    expect(pipe.transform('2026-10-01T14:30:00Z')).toBe('1 oct 2026, 09:30');
+    expect(pipe.transform('2026-10-01T03:30:00Z')).toBe('30 sept 2026, 22:30');
   });
 });

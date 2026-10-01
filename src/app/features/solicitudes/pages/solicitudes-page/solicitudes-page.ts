@@ -7,6 +7,7 @@ import {
   inject,
   OnInit,
   signal,
+  untracked,
 } from '@angular/core';
 import { SolicitudResultado as SolicitudResultadoModel } from '../../models/solicitud.model';
 import { SolicitudesStore } from '../../state/solicitudes.store';
@@ -35,7 +36,8 @@ type VistaInspector = 'formulario' | 'envio' | 'consulta';
 export class SolicitudesPage implements OnInit {
   protected readonly store = inject(SolicitudesStore);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
-  protected readonly vistaInspector = signal<VistaInspector>('formulario');
+  protected readonly vistaInspector = signal<VistaInspector>('consulta');
+  protected readonly formularioIniciado = signal(false);
   protected readonly tituloInspector = computed(() => {
     switch (this.vistaInspector()) {
       case 'formulario':
@@ -50,7 +52,9 @@ export class SolicitudesPage implements OnInit {
     const estado = this.store.envio().tipo;
     if (estado === 'submitting' || estado === 'unconfirmed') return 'Operación en curso';
     if (estado === 'invalid') return 'Corregir solicitud';
-    if (estado === 'idle' && this.vistaInspector() !== 'formulario') return 'Continuar borrador';
+    if (estado === 'idle' && this.vistaInspector() !== 'formulario') {
+      return this.formularioIniciado() ? 'Continuar borrador' : 'Nueva solicitud';
+    }
     return 'Nueva solicitud';
   });
   protected readonly accionPrincipalBloqueada = computed(() => {
@@ -65,6 +69,7 @@ export class SolicitudesPage implements OnInit {
 
   constructor() {
     let estadoAnterior = this.store.envio().tipo;
+    let seleccionInicialRealizada = false;
     effect(() => {
       const estadoActual = this.store.envio().tipo;
       const estadoCambio = estadoActual !== estadoAnterior;
@@ -74,6 +79,23 @@ export class SolicitudesPage implements OnInit {
       estadoAnterior = estadoActual;
       if (estadoCambio && estadoActual !== 'idle') this.enfocarInspector();
     });
+    effect(() => {
+      const recientes = this.store.recientes();
+      const consulta = this.store.consulta();
+      const vista = this.vistaInspector();
+      if (
+        seleccionInicialRealizada ||
+        recientes.cargando ||
+        !recientes.datos.length ||
+        consulta.cargando
+      ) {
+        return;
+      }
+      seleccionInicialRealizada = true;
+      if (vista === 'consulta' && !consulta.datos && !consulta.error) {
+        untracked(() => this.store.seleccionarConsulta(recientes.datos[0]));
+      }
+    });
   }
 
   ngOnInit(): void {
@@ -82,6 +104,7 @@ export class SolicitudesPage implements OnInit {
 
   protected prepararSolicitud(): void {
     if (this.accionPrincipalBloqueada()) return;
+    this.formularioIniciado.set(true);
     const estado = this.store.envio().tipo;
     if (estado === 'resolved' || estado === 'conflict') this.store.nuevaSolicitud();
     this.vistaInspector.set('formulario');

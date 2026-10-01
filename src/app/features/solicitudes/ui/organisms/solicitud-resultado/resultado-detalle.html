@@ -32,9 +32,10 @@
     <dd>{{ datos.termMonths }} meses</dd>
   </div>
   <div class="ancho-completo">
-    <dt>Fecha de procesamiento · Bogotá</dt>
+    <dt>Fecha de procesamiento</dt>
     <dd>
-      <time [attr.datetime]="datos.processedAt">{{ datos.processedAt | fechaSolicitud }}</time>
+      <time [attr.datetime]="datos.processedAt">{{ datos.processedAt | fechaSolicitud }}</time> ·
+      Bogotá
     </dd>
   </div>
 </dl>
