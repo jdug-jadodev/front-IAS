@@ -1,0 +1,43 @@
+<section class="panel" aria-labelledby="titulo-recientes">
+  @let recientes = store.recientes();
+  <div class="encabezado-panel">
+    <div>
+      <p class="sobrelinea">04 · Historial</p>
+      <h2 id="titulo-recientes">Solicitudes recientes</h2>
+    </div>
+    <button type="button" [disabled]="recientes.cargando" (click)="store.cargarRecientes()">
+      Actualizar
+    </button>
+  </div>
+  <p class="texto-secundario">Últimas 20 solicitudes. Abre una para ver su detalle.</p>
+  @if (recientes.cargando) {
+    <app-indicador-carga texto="Actualizando solicitudes…" />
+  }
+  @if (recientes.error; as error) {
+    <app-mensaje
+      [texto]="'No se pudo actualizar el listado. ' + error.message"
+      [detalle]="error.traceId ?? ''"
+    />
+    @if (recientes.datos.length) {
+      <p class="ayuda">Se conservan los últimos datos recibidos.</p>
+    }
+  }
+  @if (!recientes.cargando && !recientes.error && !recientes.datos.length) {
+    <p class="vacio">Aún no hay solicitudes registradas.</p>
+  }
+  <div class="lista-recientes">
+    @for (solicitud of recientes.datos; track solicitud.applicationReference) {
+      <details>
+        <summary>
+          <strong>{{ solicitud.applicationReference }}</strong>
+          <span>{{ solicitud.status === 'APPROVED' ? 'Aprobada' : 'Rechazada' }}</span>
+          <small
+            >Procesada (UTC):
+            {{ solicitud.processedAt | date: 'dd/MM/yyyy HH:mm:ss' : 'UTC' }}</small
+          >
+        </summary>
+        <app-resultado-detalle [resultado]="solicitud" />
+      </details>
+    }
+  </div>
+</section>

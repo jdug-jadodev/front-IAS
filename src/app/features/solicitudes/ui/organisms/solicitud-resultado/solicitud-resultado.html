@@ -1,0 +1,76 @@
+<section class="panel" aria-labelledby="titulo-resultado">
+  <p class="sobrelinea">02 · Resultado</p>
+  <h2 id="titulo-resultado">Estado de la solicitud</h2>
+  @let estado = store.envio();
+  <div aria-live="polite">
+    @switch (estado.tipo) {
+      @case ('idle') {
+        <p class="vacio">El resultado aparecerá aquí después de enviar una solicitud.</p>
+      }
+      @case ('submitting') {
+        <app-indicador-carga texto="Enviando solicitud…" />
+        <p>Referencia: {{ estado.datos.applicationReference }}</p>
+      }
+      @case ('resolved') {
+        <app-resultado-detalle [resultado]="estado.resultado" />
+        <button type="button" (click)="store.nuevaSolicitud()">Nueva solicitud</button>
+      }
+      @case ('invalid') {
+        <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+        <p class="ayuda">Puedes corregir los campos y volver a enviar.</p>
+      }
+      @case ('conflict') {
+        <p class="estado estado--conflicto">Referencia en conflicto</p>
+        <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+        <p>Referencia: {{ estado.datos.applicationReference }}</p>
+        <p class="ayuda">
+          Consulta el registro original o inicia una solicitud con otra referencia.
+        </p>
+        <div class="acciones">
+          <button
+            type="button"
+            aria-controls="consulta-referencia"
+            (click)="store.consultarPorReferencia(estado.datos.applicationReference)"
+          >
+            Consultar original
+          </button>
+          <button type="button" (click)="store.nuevaSolicitud()">Nueva solicitud</button>
+        </div>
+      }
+      @case ('unconfirmed') {
+        <p class="estado estado--pendiente">Resultado sin confirmar</p>
+        <p>Referencia: {{ estado.datos.applicationReference }}</p>
+        <p>
+          Conservamos los datos originales. Consulta la referencia o reintenta el mismo envío para
+          confirmar su resultado.
+        </p>
+        <app-mensaje
+          tono="info"
+          [texto]="estado.error.message"
+          [detalle]="estado.error.traceId ?? ''"
+        />
+        @if (store.recuperando()) {
+          <app-indicador-carga
+            [texto]="
+              estado.recuperacion === 'consulta'
+                ? 'Consultando el envío pendiente…'
+                : 'Reintentando el envío original…'
+            "
+          />
+        }
+        <div class="acciones">
+          <button
+            type="button"
+            [disabled]="store.recuperando()"
+            (click)="store.consultarEnvioPendiente()"
+          >
+            Consultar esta referencia
+          </button>
+          <button type="button" [disabled]="store.recuperando()" (click)="store.reintentarEnvio()">
+            Reintentar mismo envío
+          </button>
+        </div>
+      }
+    }
+  </div>
+</section>

@@ -1,0 +1,35 @@
+<section class="panel" id="consulta-referencia" aria-labelledby="titulo-consulta">
+  <p class="sobrelinea">03 · Consultar</p>
+  <h2 id="titulo-consulta">Buscar por referencia</h2>
+  <p class="texto-secundario">Recupera el resultado de una solicitud registrada.</p>
+  <form [formGroup]="form" (ngSubmit)="consultar()" novalidate autocomplete="off">
+    <app-campo
+      controlId="consulta"
+      etiqueta="Referencia a consultar"
+      ayuda="La consulta es independiente de la solicitud que estás preparando."
+      [error]="referencia.touched && referencia.invalid ? 'Escribe una referencia.' : ''"
+    >
+      <input
+        id="consulta"
+        type="text"
+        formControlName="referencia"
+        required
+        aria-describedby="consulta-ayuda consulta-error"
+        [attr.aria-invalid]="referencia.touched && referencia.invalid"
+      />
+    </app-campo>
+    <button type="submit">Consultar referencia</button>
+  </form>
+  @let consulta = store.consulta();
+  @if (consulta.cargando) {
+    <app-indicador-carga texto="Consultando referencia…" />
+  }
+  @if (consulta.error; as error) {
+    <app-mensaje [texto]="error.message" [detalle]="error.traceId ?? ''" />
+  }
+  <div aria-live="polite">
+    @if (consulta.datos; as datos) {
+      <app-resultado-detalle [resultado]="datos" />
+    }
+  </div>
+</section>
