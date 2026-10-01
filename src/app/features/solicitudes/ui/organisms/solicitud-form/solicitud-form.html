@@ -1,17 +1,25 @@
-<section class="panel" aria-labelledby="titulo-formulario">
-  <div class="encabezado-panel">
-    <div>
-      <p class="sobrelinea">01 · Registrar</p>
-      <h2 id="titulo-formulario">Solicitud de crédito</h2>
-    </div>
-    <span class="etiqueta">Todos los campos son obligatorios</span>
-  </div>
-  <p class="texto-secundario">
-    Completa los datos. El resultado será decidido por el sistema de créditos.
+<div class="solicitud-formulario">
+  <p class="texto-secundario introduccion">
+    Completa los datos. El sistema de créditos devolverá la decisión procesada.
   </p>
-  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate autocomplete="off">
+  <p class="etiqueta">Todos los campos son obligatorios.</p>
+
+  @if (store.envio(); as estado) {
+    @if (estado.tipo === 'invalid') {
+      <app-mensaje [texto]="estado.error.message" [detalle]="estado.error.traceId ?? ''" />
+    }
+  }
+
+  <form
+    [formGroup]="form"
+    (ngSubmit)="enviar()"
+    novalidate
+    autocomplete="off"
+    [attr.aria-busy]="store.envio().tipo === 'submitting'"
+  >
     <div class="cuadricula-campos">
       <app-campo
+        class="campo-ancho"
         controlId="referencia"
         etiqueta="Referencia de la solicitud"
         ayuda="Identifica esta operación y permite recuperar su resultado."
@@ -19,23 +27,32 @@
       >
         <input
           id="referencia"
+          name="applicationReference"
           type="text"
           formControlName="applicationReference"
+          placeholder="Ej. REF-004"
+          autocomplete="off"
+          spellcheck="false"
           required
           aria-describedby="referencia-ayuda referencia-error"
           [attr.aria-invalid]="!!error('applicationReference')"
         />
       </app-campo>
       <app-campo
+        class="campo-ancho"
         controlId="cliente"
-        etiqueta="Identificador del cliente"
+        etiqueta="ID del cliente"
         ayuda="Ingresa el identificador tal como está registrado."
         [error]="error('customerId')"
       >
         <input
           id="cliente"
+          name="customerId"
           type="text"
           formControlName="customerId"
+          placeholder="Ej. CLI-1001"
+          autocomplete="off"
+          spellcheck="false"
           required
           aria-describedby="cliente-ayuda cliente-error"
           [attr.aria-invalid]="!!error('customerId')"
@@ -43,15 +60,19 @@
       </app-campo>
       <app-campo
         controlId="monto"
-        etiqueta="Monto solicitado"
+        etiqueta="Monto en COP"
         ayuda="Usa punto decimal y ningún separador de miles. Ejemplo: 1000000.00."
         [error]="error('amount')"
       >
         <input
           id="monto"
+          name="amount"
           type="text"
           inputmode="decimal"
           formControlName="amount"
+          placeholder="Ej. 1000000.00"
+          autocomplete="off"
+          spellcheck="false"
           required
           aria-describedby="monto-ayuda monto-error"
           [attr.aria-invalid]="!!error('amount')"
@@ -65,12 +86,15 @@
       >
         <input
           id="plazo"
+          name="termMonths"
           type="number"
           inputmode="numeric"
           min="6"
           max="60"
           step="1"
           formControlName="termMonths"
+          placeholder="Ej. 24"
+          autocomplete="off"
           required
           aria-describedby="plazo-ayuda plazo-error"
           [attr.aria-invalid]="!!error('termMonths')"
@@ -85,10 +109,15 @@
     }
     <div class="acciones">
       <button type="submit" class="boton-primario" [disabled]="store.edicionBloqueada()">
-        Enviar solicitud
+        {{ store.envio().tipo === 'submitting' ? 'Enviando…' : 'Enviar solicitud' }}
       </button>
-      <button type="button" (click)="store.nuevaSolicitud()" [disabled]="store.edicionBloqueada()">
-        Limpiar campos
+      <button
+        type="button"
+        class="boton-texto"
+        (click)="store.nuevaSolicitud()"
+        [disabled]="store.edicionBloqueada()"
+      >
+        Limpiar borrador
       </button>
     </div>
     @if (store.edicionBloqueada()) {
@@ -98,4 +127,4 @@
       </p>
     }
   </form>
-</section>
+</div>

@@ -26,12 +26,14 @@ describe('Formulario de solicitud', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  it('muestra errores vinculados a los campos y no envía un formulario vacío', () => {
+  it('muestra errores vinculados, enfoca el primero y no envía un formulario vacío', async () => {
     expect(element.querySelector('#referencia-error')?.textContent).toBe('');
     element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     fixture.detectChanges();
+    await Promise.resolve();
     expect(element.querySelector('#referencia')?.getAttribute('aria-invalid')).toBe('true');
     expect(element.querySelector('#referencia-error')?.textContent).toContain('Escribe');
+    expect(document.activeElement).toBe(element.querySelector('#referencia'));
     http.expectNone('/api/applications');
   });
 

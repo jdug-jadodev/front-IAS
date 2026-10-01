@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, output } from '@angular/core';
 import { IndicadorCarga } from '../../../../../shared/ui/atoms/indicador-carga';
 import { Mensaje } from '../../../../../shared/ui/atoms/mensaje';
 import { SolicitudesStore } from '../../../state/solicitudes.store';
@@ -8,8 +8,16 @@ import { ResultadoDetalle } from './resultado-detalle';
   selector: 'app-solicitud-resultado',
   imports: [IndicadorCarga, Mensaje, ResultadoDetalle],
   templateUrl: './solicitud-resultado.html',
+  styleUrl: './solicitud-resultado.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SolicitudResultado {
   protected readonly store = inject(SolicitudesStore);
+  readonly nuevaSolicitudSolicitada = output<void>();
+  readonly consultaSolicitada = output<void>();
+
+  protected consultarOriginal(referencia: string): void {
+    this.store.consultarPorReferencia(referencia);
+    this.consultaSolicitada.emit();
+  }
 }

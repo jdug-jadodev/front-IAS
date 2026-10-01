@@ -2,11 +2,13 @@ import {
   ChangeDetectionStrategy,
   Component,
   effect,
+  ElementRef,
   inject,
   signal,
   untracked,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { Mensaje } from '../../../../../shared/ui/atoms/mensaje';
 import { Campo } from '../../../../../shared/ui/molecules/campo';
 import { SolicitudesStore } from '../../../state/solicitudes.store';
 import {
@@ -17,13 +19,14 @@ import {
 
 @Component({
   selector: 'app-solicitud-form',
-  imports: [ReactiveFormsModule, Campo],
+  imports: [ReactiveFormsModule, Campo, Mensaje],
   templateUrl: './solicitud-form.html',
   styleUrl: './solicitud-form.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SolicitudForm {
   protected readonly store = inject(SolicitudesStore);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly intentado = signal(false);
   protected readonly form = new FormGroup({
     applicationReference: new FormControl('', { nonNullable: true, validators: [noBlancos] }),
@@ -54,7 +57,14 @@ export class SolicitudForm {
     if (this.store.edicionBloqueada()) return;
     this.intentado.set(true);
     this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      queueMicrotask(() =>
+        this.host.nativeElement
+          .querySelector<HTMLInputElement>('input[aria-invalid="true"]')
+          ?.focus(),
+      );
+      return;
+    }
     const datos = this.form.getRawValue();
     if (datos.termMonths === null) return;
     this.store.enviar({ ...datos, termMonths: datos.termMonths });
