@@ -1,15 +1,5 @@
-<section class="panel" aria-labelledby="titulo-recientes">
-  @let recientes = store.recientes();
-  <div class="encabezado-panel">
-    <div>
-      <p class="sobrelinea">04 · Historial</p>
-      <h2 id="titulo-recientes">Solicitudes recientes</h2>
-    </div>
-    <button type="button" [disabled]="recientes.cargando" (click)="store.cargarRecientes()">
-      Actualizar
-    </button>
-  </div>
-  <p class="texto-secundario">Últimas 20 solicitudes. Abre una para ver su detalle.</p>
+@let recientes = store.recientes();
+<div class="solicitudes-recientes">
   @if (recientes.cargando) {
     <app-indicador-carga texto="Actualizando solicitudes…" />
   }
@@ -23,21 +13,57 @@
     }
   }
   @if (!recientes.cargando && !recientes.error && !recientes.datos.length) {
-    <p class="vacio">Aún no hay solicitudes registradas.</p>
+    <div class="vacio">
+      <strong>Aún no hay solicitudes registradas.</strong>
+      <p>Cuando el backend procese una operación, aparecerá en este listado.</p>
+    </div>
   }
-  <div class="lista-recientes">
+  @if (recientes.datos.length) {
+    <div class="cabecera-fila" aria-hidden="true">
+      <span>Referencia / cliente</span>
+      <span>Monto · COP</span>
+      <span>Decisión</span>
+    </div>
+    <ul class="lista-recientes" aria-label="Solicitudes recientes">
     @for (solicitud of recientes.datos; track solicitud.applicationReference) {
-      <details>
-        <summary>
-          <strong>{{ solicitud.applicationReference }}</strong>
-          <span>{{ solicitud.status === 'APPROVED' ? 'Aprobada' : 'Rechazada' }}</span>
-          <small
-            >Procesada (UTC):
-            {{ solicitud.processedAt | date: 'dd/MM/yyyy HH:mm:ss' : 'UTC' }}</small
+      <li>
+        <button
+          type="button"
+          class="fila-solicitud"
+          [attr.aria-current]="
+            store.consulta().datos?.applicationReference === solicitud.applicationReference
+              ? 'true'
+              : null
+          "
+          (click)="solicitudSeleccionada.emit(solicitud)"
+        >
+          <span class="identidad-solicitud">
+            <strong translate="no">{{ solicitud.applicationReference }}</strong>
+            <small translate="no">{{ solicitud.customerId }}</small>
+            <small>{{ solicitud.processedAt | fechaSolicitud }} · Bogotá</small>
+          </span>
+          <span class="monto-listado numero-tabular">
+            {{ solicitud.amount | montoCop }}
+          </span>
+          <span
+            class="estado"
+            [class.estado--aprobado]="solicitud.status === 'APPROVED'"
+            [class.estado--rechazado]="solicitud.status === 'REJECTED'"
           >
-        </summary>
-        <app-resultado-detalle [resultado]="solicitud" />
-      </details>
+            @if (solicitud.status === 'APPROVED') {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+              Aprobada
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 6 12 12M18 6 6 18" />
+              </svg>
+              Rechazada
+            }
+          </span>
+        </button>
+      </li>
     }
-  </div>
-</section>
+    </ul>
+    <p class="pie-listado">Selecciona una solicitud para consultar su detalle.</p>
+  }
+</div>

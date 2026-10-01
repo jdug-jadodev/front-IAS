@@ -1,18 +1,93 @@
+.resumen-resultado {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.estado svg {
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+}
+
+.referencia {
+  margin-top: var(--space-1);
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  letter-spacing: -0.03em;
+  overflow-wrap: anywhere;
+}
+
+.monto-destacado {
+  margin-top: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-4) var(--space-5);
+}
+
+.monto {
+  margin-top: var(--space-1);
+  color: var(--color-text-strong);
+  font-size: clamp(1.75rem, 5vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.monto small {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
 .detalle-resultado {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-block: 0 1.5rem;
+  gap: var(--space-5) var(--space-3);
+  margin-block: var(--space-5) 0;
 }
+
 dt {
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
+
 dd {
-  margin: 0;
-  font-weight: 600;
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-strong);
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
+
 .ancho-completo {
   grid-column: 1 / -1;
+}
+
+.motivo-rechazo {
+  margin-top: var(--space-5);
+  border: 1px solid #efc7ca;
+  border-radius: var(--radius-control);
+  padding: var(--space-3);
+  background: var(--color-error-surface);
+  color: var(--color-error);
+  font-size: 0.875rem;
+}
+
+.motivo-rechazo p {
+  margin-top: var(--space-1);
+}
+
+.motivo-rechazo .codigo {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 24rem) {
+  .detalle-resultado {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ancho-completo {
+    grid-column: auto;
+  }
 }

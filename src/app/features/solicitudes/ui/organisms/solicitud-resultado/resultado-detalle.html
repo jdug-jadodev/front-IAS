@@ -1,38 +1,51 @@
 @let datos = resultado();
-<p
-  class="estado"
-  [class.estado--aprobado]="datos.status === 'APPROVED'"
-  [class.estado--rechazado]="datos.status === 'REJECTED'"
->
-  {{ datos.status === 'APPROVED' ? 'Aprobada' : 'Rechazada' }}
-</p>
+<div class="resumen-resultado">
+  <p
+    class="estado"
+    [class.estado--aprobado]="datos.status === 'APPROVED'"
+    [class.estado--rechazado]="datos.status === 'REJECTED'"
+  >
+    @if (datos.status === 'APPROVED') {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+      Aprobada
+    } @else {
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+      Rechazada
+    }
+  </p>
+  <h3 class="referencia" translate="no">{{ datos.applicationReference }}</h3>
+  <p class="texto-secundario">
+    {{ datos.status === 'APPROVED' ? 'La solicitud fue aprobada.' : 'La solicitud fue rechazada.' }}
+  </p>
+</div>
+
+<div class="monto-destacado">
+  <p class="etiqueta">Monto solicitado</p>
+  <p class="monto numero-tabular">
+    {{ datos.amount | montoCop }} <small>COP</small>
+  </p>
+</div>
+
 <dl class="detalle-resultado">
   <div>
-    <dt>Referencia</dt>
-    <dd>{{ datos.applicationReference }}</dd>
-  </div>
-  <div>
-    <dt>Cliente</dt>
-    <dd>{{ datos.customerId }}</dd>
-  </div>
-  <div>
-    <dt>Monto</dt>
-    <dd>{{ datos.amount }}</dd>
+    <dt>ID del cliente</dt>
+    <dd translate="no">{{ datos.customerId }}</dd>
   </div>
   <div>
     <dt>Plazo</dt>
     <dd>{{ datos.termMonths }} meses</dd>
   </div>
   <div class="ancho-completo">
-    <dt>Procesada (UTC)</dt>
+    <dt>Fecha de procesamiento · Bogotá</dt>
     <dd>
-      <time [attr.datetime]="datos.processedAt">{{
-        datos.processedAt | date: 'dd/MM/yyyy HH:mm:ss' : 'UTC'
-      }}</time>
+      <time [attr.datetime]="datos.processedAt">{{ datos.processedAt | fechaSolicitud }}</time>
     </dd>
   </div>
 </dl>
 @if (datos.status === 'REJECTED') {
-  <p><strong>Motivo:</strong> {{ datos.reason }}</p>
-  <p class="ayuda">Código: {{ datos.reasonCode }}</p>
+  <div class="motivo-rechazo">
+    <strong>Motivo de la decisión</strong>
+    <p>{{ datos.reason }}</p>
+    <p class="codigo" translate="no">Código: {{ datos.reasonCode }}</p>
+  </div>
 }
