@@ -1,0 +1,10 @@
+<div
+  class="mensaje"
+  [class.mensaje--error]="tono() === 'error'"
+  [attr.role]="tono() === 'error' ? 'alert' : 'status'"
+>
+  <p>{{ texto() }}</p>
+  @if (detalle()) {
+    <small>{{ detalle() }}</small>
+  }
+</div>
