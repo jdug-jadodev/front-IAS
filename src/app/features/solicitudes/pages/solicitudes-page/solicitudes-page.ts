@@ -67,10 +67,12 @@ export class SolicitudesPage implements OnInit {
     let estadoAnterior = this.store.envio().tipo;
     effect(() => {
       const estadoActual = this.store.envio().tipo;
+      const estadoCambio = estadoActual !== estadoAnterior;
       if (estadoActual === 'invalid') this.vistaInspector.set('formulario');
       else if (estadoActual !== 'idle') this.vistaInspector.set('envio');
       else if (estadoAnterior !== 'idle') this.vistaInspector.set('formulario');
       estadoAnterior = estadoActual;
+      if (estadoCambio && estadoActual !== 'idle') this.enfocarInspector();
     });
   }
 
@@ -107,6 +109,7 @@ export class SolicitudesPage implements OnInit {
         ? 'formulario'
         : 'envio',
     );
+    this.enfocarInspector();
   }
 
   private enfocarInspector(): void {

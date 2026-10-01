@@ -89,8 +89,10 @@ describe('Formulario de solicitud', () => {
     escribir('plazo', '18');
     element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     fixture.detectChanges();
+    await Promise.resolve();
 
     expect(element.querySelector('#referencia')).toBeNull();
+    expect(document.activeElement).toBe(element.querySelector('#titulo-revision'));
     element.querySelectorAll<HTMLButtonElement>('.revision-envio button')[1].click();
     fixture.detectChanges();
     await Promise.resolve();
@@ -101,7 +103,7 @@ describe('Formulario de solicitud', () => {
     http.expectNone('/api/applications');
   });
 
-  it('protege un borrador modificado antes de descartarlo', () => {
+  it('protege un borrador modificado y devuelve el foco después de descartarlo', async () => {
     escribir('referencia', 'BORRADOR');
     element.querySelectorAll<HTMLButtonElement>('.acciones button')[1].click();
     fixture.detectChanges();
@@ -110,7 +112,9 @@ describe('Formulario de solicitud', () => {
     expect(element.querySelector('.confirmacion-descarte')).not.toBeNull();
     element.querySelector<HTMLButtonElement>('.boton-peligro')!.click();
     fixture.detectChanges();
+    await Promise.resolve();
 
     expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('');
+    expect(document.activeElement).toBe(element.querySelector('#referencia'));
   });
 });

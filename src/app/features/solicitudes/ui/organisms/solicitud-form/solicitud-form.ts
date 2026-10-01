@@ -80,6 +80,9 @@ export class SolicitudForm {
         termMonths: datos.termMonths,
       }),
     );
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector<HTMLElement>('#titulo-revision')?.focus(),
+    );
   }
 
   protected confirmarEnvio(): void {
@@ -106,6 +109,9 @@ export class SolicitudForm {
 
   protected descartarBorrador(): void {
     this.store.nuevaSolicitud();
+    queueMicrotask(() =>
+      this.host.nativeElement.querySelector<HTMLInputElement>('#referencia')?.focus(),
+    );
   }
 
   protected conservarBorrador(): void {

@@ -21,7 +21,7 @@
       <section class="revision-envio" aria-labelledby="titulo-revision">
         <div class="encabezado-revision">
           <span class="paso">Paso 2 de 2</span>
-          <h3 id="titulo-revision">Revisa antes de enviar</h3>
+          <h3 id="titulo-revision" tabindex="-1">Revisa antes de enviar</h3>
           <p class="texto-secundario">
             Confirma que estos datos corresponden a la operación que deseas registrar.
           </p>
@@ -156,12 +156,19 @@
           class="boton-texto"
           (click)="solicitarDescarte()"
           [disabled]="store.edicionBloqueada()"
+          aria-controls="confirmacion-descarte"
+          [attr.aria-expanded]="confirmacionDescarte()"
         >
           Descartar datos
         </button>
       </div>
       @if (confirmacionDescarte()) {
-        <div class="confirmacion-descarte" role="group" aria-labelledby="titulo-descarte">
+        <div
+          id="confirmacion-descarte"
+          class="confirmacion-descarte"
+          role="group"
+          aria-labelledby="titulo-descarte"
+        >
           <p id="titulo-descarte"><strong>¿Descartar el borrador?</strong></p>
           <p class="ayuda">Los datos escritos no se podrán recuperar.</p>
           <div class="acciones acciones-compactas">

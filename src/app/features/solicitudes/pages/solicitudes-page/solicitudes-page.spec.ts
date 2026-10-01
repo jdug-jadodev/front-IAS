@@ -78,7 +78,7 @@ describe('Página de solicitudes', () => {
     expect(req.cancelled).toBe(true);
   });
 
-  it('conserva el borrador al consultar otra referencia', () => {
+  it('conserva el borrador y devuelve el foco al volver de una consulta', async () => {
     http.expectOne('/api/applications?limit=20').flush([]);
     const element = fixture.nativeElement as HTMLElement;
     const escribir = (id: string, value: string) => {
@@ -106,11 +106,13 @@ describe('Página de solicitudes', () => {
     fixture.detectChanges();
     element.querySelector<HTMLButtonElement>('.encabezado-inspector .boton-texto')!.click();
     fixture.detectChanges();
+    await Promise.resolve();
 
     expect(element.querySelector<HTMLInputElement>('#referencia')!.value).toBe('BORRADOR-1');
     expect(element.querySelector<HTMLInputElement>('#cliente')!.value).toBe('CLI-BORRADOR');
     expect(element.querySelector<HTMLInputElement>('#monto')!.value).toBe('9007199254740993.0001');
     expect(element.querySelector<HTMLInputElement>('#plazo')!.value).toBe('24');
+    expect(document.activeElement).toBe(element.querySelector('#titulo-inspector'));
   });
 
   it('lleva el foco al detalle después de consultar una referencia', async () => {
