@@ -21,20 +21,26 @@ Las skills solicitadas no estaban instaladas como comandos ejecutables en este e
 - [Anthropic frontend-design](https://github.com/anthropics/skills/tree/main/skills/frontend-design): dirección visual específica y rechazo de una apariencia genérica.
 - [Vercel Web Interface Guidelines](https://github.com/vercel-labs/web-interface-guidelines): controles, foco, formularios, movimiento y responsive.
 
-El HTML entregado por el usuario fue la autoridad para color, marca y tono. No se copiaron sus datos de ejemplo, scripts de manipulación del DOM ni comportamiento simulado.
+El HTML entregado por el usuario fue la autoridad para color, marca y tono. La diferencia entre su apariencia clara y la captura oscura no provenía de dos contenidos distintos: la referencia usa `light-dark(...)` y resuelve una rama según el `color-scheme` heredado del host. La aplicación fija la rama oscura requerida.
+
+No se copiaron mocks, datos de ejemplo, identificadores, montos, decisiones, scripts de manipulación del DOM ni comportamiento simulado. La interfaz trabaja con los resultados reales del backend.
 
 ## Decisiones influenciadas por la revisión
 
 ### Identidad
 
 - Paleta IAS: `#023365`, `#0997E6`, `#FEBD04` y `#FB2F70`.
+- Tema oscuro fijo: fondo `#111E30`, panel `#1B2B40`, campo `#122338`, selección `#203E59`, texto `#ECF3FF`, texto fuerte `#FFFFFF`, texto secundario `#B6C6DB`, borde `#3A4C65`, borde de control `#8699B0` y foco `#71CAFF`.
+- Estados de éxito `#A4E8C1`/`#1E4236` y error `#FFC1C5`/`#4B2D38`.
 - Montserrat como fuente de marca con Arial como fallback.
 - Masthead azul marino, franja multicolor y jerarquía compacta.
 - Sin gradientes decorativos adicionales, sombras intensas o tarjetas anidadas sin función.
+- Sin selector de tema ni variante clara.
 
 ### Interacción
 
 - Composición maestro–detalle para mantener búsqueda, recientes y contexto visibles.
+- La primera carga exitosa selecciona dinámicamente el primer registro real, sin hardcodear una referencia ni lanzar otro GET.
 - Formulario conservado en el DOM para proteger el borrador al consultar.
 - Revisión de los cuatro datos antes de un POST financiero.
 - Confirmación antes de descartar un borrador modificado.
@@ -63,7 +69,7 @@ El HTML entregado por el usuario fue la autoridad para color, marca y tono. No s
 
 En el cierre funcional previo a esta documentación:
 
-- 9 archivos de pruebas y 74 pruebas aprobaron;
+- 9 archivos de pruebas y 76 de 76 pruebas aprobaron;
 - el build de producción aprobó;
 - el proxy llegó a mostrar nueve solicitudes reales;
 - la revisión final del backend falló por conexión rechazada en `localhost:8080`, por lo que el POST end-to-end quedó pendiente de repetir;

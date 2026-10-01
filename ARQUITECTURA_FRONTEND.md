@@ -1,6 +1,6 @@
 # Arquitectura del frontend de créditos
 
-**Estado al 1 de octubre de 2026:** arquitectura implementada en Angular 22.2, con estilos BancoIAS, build de producción y 74 pruebas unitarias aprobadas. La validación end-to-end contra Docker sigue fuera de este repositorio.
+**Estado al 1 de octubre de 2026:** arquitectura implementada en Angular 22.2, con identidad oscura BancoIAS, build de producción y 76 pruebas unitarias aprobadas. La validación end-to-end contra Docker sigue fuera de este repositorio.
 
 **Base:** el enunciado pide registrar solicitudes, mostrar su resultado y consultar las recientes. La concurrencia y las referencias repetidas deben estar protegidas en el core. [^prueba]
 
@@ -57,7 +57,7 @@ Cada prueba `.spec.ts` irá junto a su archivo. No crear carpetas vacías. `temp
 
 **Organisms:** bloques de esta funcionalidad. Pueden inyectar el store. El formulario maneja sus controles; resultado y recientes muestran el estado compartido.
 
-**Page:** compone los bloques, proporciona el store e inicia la carga de recientes. No aprueba créditos ni hace peticiones HTTP directamente.
+**Page:** compone los bloques, proporciona el store e inicia la carga de recientes. Después de la primera carga exitosa selecciona el primer registro real mediante `seleccionarConsulta(resultado)`, sin disparar otro GET y sin una referencia fija. No aprueba créditos ni hace peticiones HTTP directamente.
 
 Preferir controles HTML nativos. No construir inputs personalizados con adaptadores de formularios solo para cumplir una categoría atómica. La molécula puede envolver un input mediante proyección de contenido.
 
@@ -202,7 +202,7 @@ Mostrar la fecha del backend, nunca inventar la fecha de procesamiento con el re
 
 `solicitud-response.parser.ts` comprueba los campos esenciales, el estado permitido y la fecha recibida. Los tipos de `HttpClient` no validan el JSON en ejecución. Una respuesta desconocida no se convertirá por defecto en una aprobación. [^http]
 
-Cargar recientes al entrar, después de confirmar un resultado y al pulsar actualizar. Evitar que una respuesta antigua sobrescriba una consulta posterior. Si falla la actualización, conservar el resultado confirmado y avisar que el listado no pudo actualizarse; **no repetir el POST**. No sustituir un error de listado por un array vacío exitoso.
+Cargar recientes al entrar, después de confirmar un resultado y al pulsar actualizar. En la primera carga exitosa, si no existe una consulta activa, seleccionar dinámicamente el primer elemento recibido para abrir su detalle; reutilizar el objeto de la lista y no hacer otro GET. Evitar que una respuesta antigua sobrescriba una consulta posterior. Si falla la actualización, conservar el resultado confirmado y avisar que el listado no pudo actualizarse; **no repetir el POST**. No sustituir un error de listado por un array vacío exitoso.
 
 ## 9. Protecciones sin construir otro sistema
 
@@ -226,7 +226,7 @@ La cola futura se conectará al backend, nunca directamente al navegador. Angula
 
 ## 11. Qué se prueba
 
-Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingController`. En el último cierre pasan 74 pruebas de 9 archivos. La integración real todavía debe comprobarse con el backend activo y, cuando exista en este repositorio, el entorno Docker. [^pruebas]
+Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingController`. En el último cierre pasan 76 pruebas de 9 archivos. La integración real todavía debe comprobarse con el backend activo y, cuando exista en este repositorio, el entorno Docker. [^pruebas]
 
 | Prueba | Resultado esperado |
 |---|---|
@@ -236,7 +236,7 @@ Las pruebas de componentes, servicio y store usan Vitest y `HttpTestingControlle
 | Decisión y errores | 201 con `REJECTED` se muestra como rechazo; 200, 400, 404, 409 y 5xx siguen sus flujos. |
 | Estados compartidos | Los organismos usan el mismo store; errores de consultas no alteran el envío. |
 | HTTP y respuesta inválida | Rutas, cuerpos, códigos y parser correctos; respuesta desconocida nunca se muestra como aprobada. |
-| Recientes | La actualización fallida no repite el POST ni borra un resultado confirmado. |
+| Recientes | La primera carga selecciona el primer registro real sin un GET adicional; una actualización fallida no repite el POST ni borra un resultado confirmado. |
 
 La concurrencia del core debe verificarse además con peticiones simultáneas directamente al backend y PostgreSQL real. No añadiremos un botón de “enviar muchas veces” ni quitaremos las protecciones del formulario para demostrarla. [^prueba]
 

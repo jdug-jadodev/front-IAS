@@ -1,6 +1,6 @@
 # Contexto para continuar el frontend de créditos
 
-**Estado al 1 de octubre de 2026:** implementación funcional en Angular 22.2, con interfaz BancoIAS, pruebas unitarias y build de producción. Este archivo resume las decisiones que una IA o una persona debe conservar al modificar el proyecto.
+**Estado al 1 de octubre de 2026:** implementación funcional en Angular 22.2, con interfaz oscura BancoIAS, 76 pruebas unitarias aprobadas y build de producción. Este archivo resume las decisiones que una IA o una persona debe conservar al modificar el proyecto.
 
 ## Reglas que no deben romperse
 
@@ -31,7 +31,7 @@ Los organismos llaman acciones del store y leen Signals; no reenvían eventos en
 
 Formulario dueño de campos y validación. Store dueño de la copia del envío, resultado, recientes y consulta. No duplicar cada pulsación. Signals modificables privadas; lectura pública; `computed` para derivados. No mutar objetos/listas desde componentes.
 
-Acciones: `enviar`, `reintentarEnvio`, `consultarEnvioPendiente`, `cargarRecientes`, `consultarPorReferencia`, `nuevaSolicitud`.
+Acciones: `enviar`, `reintentarEnvio`, `consultarEnvioPendiente`, `cargarRecientes`, `consultarPorReferencia`, `seleccionarConsulta` y `nuevaSolicitud`.
 
 ## Validación
 
@@ -67,7 +67,7 @@ Entrada: `applicationReference`, `customerId`, `amount`, `termMonths`. Respuesta
 
 Parser pequeño para campos esenciales, estado y fecha. Tipos TS no validan JSON. Mapper de errores con mensaje seguro y `traceId`, sin excepciones Java ni trazas técnicas.
 
-Actualizar recientes al entrar, confirmar y actualizar manualmente. Error del listado no borra resultado, no repite POST ni se convierte en lista vacía exitosa.
+Actualizar recientes al entrar, confirmar y actualizar manualmente. Tras la primera carga exitosa, si no hay una consulta activa, la página selecciona el primer registro real con `seleccionarConsulta`; reutiliza el resultado del listado, sin otro GET y sin una referencia fija. Error del listado no borra resultado, no repite POST ni se convierte en lista vacía exitosa.
 
 ## Protección, local y pruebas
 
@@ -79,8 +79,10 @@ La suite ejecutada cubre validaciones, cuerpo exacto, revisión, doble envío, s
 
 ## Presentación implementada
 
-Identidad IAS con azul marino, azul brillante, amarillo y rosa como acentos contenidos; Montserrat con Arial como fallback. La pantalla usa una composición maestro–detalle: búsqueda e historial a la izquierda e inspector contextual a la derecha. En móvil se apila, traslada el foco al resultado y no debe producir desplazamiento horizontal.
+Identidad IAS oscura fija con Montserrat y Arial como fallback. Tokens base: fondo `#111E30`, superficie `#1B2B40`, campo `#122338`, superficie seleccionada `#203E59`, texto `#ECF3FF`, texto fuerte `#FFFFFF`, texto secundario `#B6C6DB`, borde `#3A4C65`, borde de control `#8699B0` y enlace/foco `#71CAFF`. Acentos de marca: azul marino `#023365`, azul brillante `#0997E6`, amarillo `#FEBD04` y rosa `#FB2F70`. Estados: éxito `#A4E8C1` sobre `#1E4236` y error `#FFC1C5` sobre `#4B2D38`.
+
+La pantalla usa una composición maestro–detalle: búsqueda e historial a la izquierda e inspector contextual a la derecha. En móvil se apila, traslada el foco al resultado y no debe producir desplazamiento horizontal.
 
 Los controles miden al menos 44 px, el foco es visible y los estados usan texto e icono. Las fechas se muestran en `America/Bogota`; los importes se formatean con `BigInt` e `Intl.NumberFormat`, sin perder la fracción textual.
 
-El estado vive en memoria y no usa `localStorage`. No hay login, permisos, modo oscuro ni cola en el navegador. `bancoias-identidad-ias.html` es una referencia visual: no importarlo ni ejecutar su JavaScript dentro de Angular.
+La referencia usa `light-dark(...)`: su apariencia cambia según el `color-scheme` que herede del host. Para reproducir la variante solicitada, la aplicación fija `color-scheme: dark`; no hay selector de tema ni variante clara. El estado vive en memoria y no usa `localStorage`. No hay login, permisos ni cola en el navegador. `bancoias-identidad-ias.html` es solo una referencia visual: no importarlo, ejecutar su JavaScript ni copiar sus datos simulados dentro de Angular.
