@@ -10,9 +10,6 @@
       [disabled]="accionPrincipalBloqueada()"
       (click)="prepararSolicitud()"
     >
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 5v14M5 12h14" />
-      </svg>
       {{ etiquetaAccionPrincipal() }}
     </button>
   </div>
@@ -27,25 +24,17 @@
       [attr.aria-busy]="recientes.cargando"
     >
       <div class="encabezado-listado">
-        <div>
-          <h2 id="titulo-recientes">Solicitudes recientes</h2>
-          <p class="texto-secundario">Últimas 20 solicitudes procesadas.</p>
-        </div>
-        <div class="acciones-listado">
-          <span
-            class="contador"
-            [attr.aria-label]="recientes.datos.length + ' solicitudes cargadas'"
-            >{{ recientes.datos.length }}</span
-          >
-          <button
-            type="button"
-            class="boton-texto"
-            [disabled]="recientes.cargando"
-            (click)="store.cargarRecientes()"
-          >
-            {{ recientes.cargando ? 'Actualizando…' : 'Actualizar' }}
-          </button>
-        </div>
+        <h2 id="titulo-recientes">Solicitudes recientes</h2>
+        <button
+          type="button"
+          class="contador"
+          title="Actualizar solicitudes"
+          [disabled]="recientes.cargando"
+          [attr.aria-label]="recientes.datos.length + ' solicitudes cargadas. Actualizar listado'"
+          (click)="store.cargarRecientes()"
+        >
+          {{ recientes.datos.length }}
+        </button>
       </div>
 
       <app-consulta-referencia (consultaSolicitada)="mostrarConsulta()" />

@@ -18,7 +18,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.logotipo')?.getAttribute('aria-label')).toBe('IAS Software');
+    expect(compiled.querySelector('.logotipo img')?.getAttribute('alt')).toBe('IAS Software');
     expect(compiled.querySelector('.producto')?.textContent).toContain('BancoIAS');
   });
 });

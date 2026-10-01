@@ -6,10 +6,8 @@
     [class.estado--rechazado]="datos.status === 'REJECTED'"
   >
     @if (datos.status === 'APPROVED') {
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
       Aprobada
     } @else {
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
       Rechazada
     }
   </p>

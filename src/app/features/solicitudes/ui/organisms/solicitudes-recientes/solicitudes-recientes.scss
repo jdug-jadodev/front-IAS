@@ -15,18 +15,18 @@
 .cabecera-fila,
 .fila-solicitud {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(7rem, 0.85fr) minmax(6.5rem, 0.7fr);
+  grid-template-columns: minmax(0, 1.4fr) minmax(5.5rem, 0.85fr) minmax(5.25rem, 0.7fr);
   align-items: center;
-  gap: var(--space-4);
+  gap: 0.75rem;
 }
 
 .cabecera-fila {
   border-block: 1px solid var(--color-border);
-  padding: 0.65rem var(--space-5);
+  padding: 0.625rem 1rem;
   background: var(--color-background);
   color: var(--color-text-muted);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.6875rem;
+  font-weight: 600;
 }
 
 .cabecera-fila span:nth-child(2),
@@ -49,10 +49,10 @@
 
 .fila-solicitud {
   width: 100%;
-  min-height: 5.75rem;
+  min-height: 4.375rem;
   border: 0;
   border-radius: 0;
-  padding: var(--space-4) var(--space-5);
+  padding: 1.0625rem 1rem;
   color: var(--color-text);
   text-align: left;
 }
@@ -81,18 +81,20 @@
 
 .identidad-solicitud strong {
   color: var(--color-link);
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
 
 .identidad-solicitud small {
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   overflow-wrap: anywhere;
 }
 
 .monto-listado {
   color: var(--color-text-strong);
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -110,45 +112,33 @@
 
 .pie-listado {
   border-top: 1px solid var(--color-border);
-  padding: var(--space-3) var(--space-5);
+  padding: 0.75rem 1.25rem;
   color: var(--color-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
 }
 
-@media (max-width: 40rem) {
+@media (max-width: 27.5rem) {
   .solicitudes-recientes > app-indicador-carga,
   .solicitudes-recientes > app-mensaje,
   .solicitudes-recientes > .ayuda,
   .solicitudes-recientes > .vacio {
-    margin-inline: var(--space-4);
+    margin-inline: 0.875rem;
   }
 
   .cabecera-fila {
-    display: none;
+    padding-inline: 0.625rem;
   }
 
   .lista-recientes {
     max-height: none;
-    border-top: 1px solid var(--color-border);
   }
 
   .fila-solicitud {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: var(--space-3);
-    padding-inline: var(--space-4);
-  }
-
-  .monto-listado {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    text-align: left;
-  }
-
-  .estado {
-    justify-self: end;
+    gap: 0.5rem;
+    padding: 0.8125rem 0.625rem;
   }
 
   .pie-listado {
-    padding-inline: var(--space-4);
+    padding-inline: 0.9375rem;
   }
 }

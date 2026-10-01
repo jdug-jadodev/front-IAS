@@ -1,5 +1,5 @@
 .consulta-referencia {
-  padding: 0 var(--space-5) var(--space-5);
+  padding: 0 1.25rem 1.0625rem;
 }
 
 form {
@@ -14,20 +14,11 @@ app-campo {
 }
 
 button {
-  margin-bottom: var(--space-4);
+  margin-bottom: 0;
 }
 
-@media (max-width: 40rem) {
+@media (max-width: 27.5rem) {
   .consulta-referencia {
-    padding-inline: var(--space-4);
-  }
-
-  form {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  button {
-    width: 100%;
-    margin-top: calc(-1 * var(--space-2));
+    padding: 0 0.875rem 0.9375rem;
   }
 }

@@ -119,7 +119,7 @@ export class SolicitudesPage implements OnInit {
       const ventana = this.host.nativeElement.ownerDocument.defaultView;
       if (
         typeof ventana?.matchMedia === 'function' &&
-        ventana.matchMedia('(max-width: 58rem)').matches
+        ventana.matchMedia('(max-width: 49.375rem)').matches
       ) {
         titulo?.scrollIntoView({ block: 'start' });
       }

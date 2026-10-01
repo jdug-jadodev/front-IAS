@@ -3,12 +3,11 @@ import { IndicadorCarga } from '../../../../../shared/ui/atoms/indicador-carga';
 import { Mensaje } from '../../../../../shared/ui/atoms/mensaje';
 import { SolicitudResultado } from '../../../models/solicitud.model';
 import { SolicitudesStore } from '../../../state/solicitudes.store';
-import { FechaSolicitudPipe } from '../../pipes/fecha-solicitud.pipe';
 import { MontoCopPipe } from '../../pipes/monto-cop.pipe';
 
 @Component({
   selector: 'app-solicitudes-recientes',
-  imports: [IndicadorCarga, Mensaje, FechaSolicitudPipe, MontoCopPipe],
+  imports: [IndicadorCarga, Mensaje, MontoCopPipe],
   templateUrl: './solicitudes-recientes.html',
   styleUrl: './solicitudes-recientes.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

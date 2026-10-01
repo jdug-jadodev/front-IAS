@@ -1,6 +1,6 @@
 .solicitud-resultado {
   display: grid;
-  gap: var(--space-4);
+  gap: 1rem;
 }
 
 .referencia-operacion {
@@ -10,7 +10,7 @@
 
 .referencia-pendiente {
   margin-top: var(--space-1);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   overflow-wrap: anywhere;
 }
 
@@ -27,12 +27,13 @@
 
 .resumen-pendiente dt {
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
 }
 
 .resumen-pendiente dd {
   margin: var(--space-1) 0 0;
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 

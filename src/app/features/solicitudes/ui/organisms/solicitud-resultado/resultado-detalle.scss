@@ -3,34 +3,26 @@
   gap: var(--space-2);
 }
 
-.estado svg {
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 2.25;
-}
-
 .referencia {
-  margin-top: var(--space-1);
-  font-size: clamp(1.35rem, 3vw, 1.75rem);
-  letter-spacing: -0.03em;
+  margin-top: 0.5625rem;
+  font-size: 1.25rem;
+  letter-spacing: -0.03125rem;
   overflow-wrap: anywhere;
 }
 
 .monto-destacado {
-  margin-top: var(--space-6);
+  margin-top: 1.4375rem;
   border-bottom: 1px solid var(--color-border);
-  padding-block: var(--space-4) var(--space-5);
+  padding-block: 1.0625rem 1.1875rem;
 }
 
 .monto {
   margin-top: var(--space-1);
   color: var(--color-text-strong);
-  font-size: clamp(1.75rem, 5vw, 2.35rem);
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 1.2;
+  font-size: 1.6875rem;
+  font-weight: 700;
+  letter-spacing: -0.04375rem;
+  line-height: 1.25;
   overflow-wrap: anywhere;
 }
 
@@ -44,19 +36,20 @@
 .detalle-resultado {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-3);
-  margin-block: var(--space-5) 0;
+  gap: 1.1875rem 0.75rem;
+  margin-block: 1.1875rem 0;
 }
 
 dt {
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.6875rem;
 }
 
 dd {
-  margin: var(--space-1) 0 0;
+  margin: 0.3125rem 0 0;
   color: var(--color-text-strong);
-  font-weight: 700;
+  font-size: 0.75rem;
+  font-weight: 600;
   overflow-wrap: anywhere;
 }
 
@@ -65,13 +58,13 @@ dd {
 }
 
 .motivo-rechazo {
-  margin-top: var(--space-5);
-  border: 1px solid #efc7ca;
+  margin-top: 1.125rem;
+  border: 1px solid #7d4b58;
   border-radius: var(--radius-control);
-  padding: var(--space-3);
+  padding: 0.75rem;
   background: var(--color-error-surface);
   color: var(--color-error);
-  font-size: 0.875rem;
+  font-size: 0.6875rem;
 }
 
 .motivo-rechazo p {
